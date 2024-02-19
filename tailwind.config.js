@@ -1,3 +1,4 @@
+const defaultTheme = require('tailwindcss/defaultTheme')
 const animate = require("tailwindcss-animate")
 
 /** @type {import('tailwindcss').Config} */
@@ -14,6 +15,10 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Inter", ...defaultTheme.fontFamily.sans],
+        mono: ["JetBrains Mono", ...defaultTheme.fontFamily.mono],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
