@@ -1,0 +1,14 @@
+{
+  "name": "radoslav-kolev-nemetschek-rise-2024",
+  "private": true,
+  "version": "1.0.0",
+  "author": "rakolev",
+  "license": "ISC",
+  "type": "module",
+  "engines": {
+    "node": ">=18.x"
+  },
+  "dependencies": {
+    "lib": "link:./lib"
+  }
+}
