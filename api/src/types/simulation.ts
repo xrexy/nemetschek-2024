@@ -38,12 +38,14 @@ export type SimulationData = {
   deliveryStatus: SimulationDeliveryStatus,
   timeFactorMs: number,
   history: History,
+  slug: string;
   analytics: {
     openOrders: number,
     droneCount: number,
+    hasOpenOrders: boolean,
 
     totalOrdersDelivered: number,
-    totalDistance: number,
+    totalDistanceCovered: number,
 
     averageDistancePerOrder: number,
     averageDistancePerDrone: number,

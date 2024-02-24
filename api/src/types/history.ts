@@ -3,6 +3,7 @@ import type { Order } from "./order"
 import type { Warehouse } from "./warehouse"
 
 export type HistoryEvents = 'created' | 'drone-created' | 'drone-returned' | 'drone-sent' | 'order-fulfilled'
+type MinimalOrder = { customerId: number } & Pick<Order, 'productList'>
 
 export interface HistoryEventPayloads {
   created: {},
@@ -18,18 +19,16 @@ export interface HistoryEventPayloads {
 
   'drone-sent': {
     droneId: number,
-    order: Order,
+    order: MinimalOrder,
     warehouseId: number
     distance: number;
   },
 
   'order-fulfilled': {
-    order: Order,
+    order: MinimalOrder,
     droneId: number
   }
 }
-
-type a = HistoryEventPayloads['drone-sent']
 
 export interface HistoryEvent<Event extends HistoryEvents> {
   event: Event,
@@ -38,7 +37,6 @@ export interface HistoryEvent<Event extends HistoryEvents> {
 }
 
 export function createHistoryEvent<Event extends HistoryEvents>(event: Event, payload: HistoryEventPayloads[Event], ts = Date.now()): HistoryEvent<Event> {
-  console.debug(`Creating history event: ${event}`)
   return {
     event,
     payload,

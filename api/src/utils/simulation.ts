@@ -2,10 +2,12 @@ import { distanceBetween } from "./distance";
 
 import { Drone, DroneStatus, DroneStatusData } from "../types/drone";
 import { HistoryEventPayloads, HistoryEvents, createHistoryEvent } from "../types/history";
+
 import { Order } from "../types/order";
 import { Position } from "../types/position";
 import { SimulationData } from "../types/simulation";
 import { Warehouse } from "../types/warehouse";
+import { memoryDbHistory, memoryDb } from "./db";
 
 export const WAREHOUSE_TIME_FOR_FULL_CHARGE = 20;
 export const RESUPPLY_DELAY = 20;
@@ -27,127 +29,23 @@ export function createDrone(o: {
     statusData: Partial<DroneStatusData>,
   }
 }): Drone {
-  console.error('CREATING DRONE')
   const { data, droneData, distance, packageWeight } = o;
 
   const id = data.drones.length;
   const { battery } = findCheapestBattery(data.batteries, distance, packageWeight);
 
-  data.history.data.push(createHistoryEvent('drone-created', { droneId: id }))
+  memoryDbHistory(data).addEvent('drone-created', { droneId: id })
 
-  console.debug('dc', data.analytics.droneCount)
-  data.analytics.droneCount++;
-  console.debug('dc1', data.analytics.droneCount)
-
-  return {
+  const drone = {
     battery,
     id,
     ...droneData
   }
-}
 
-// -- Cleaned up(i hope) impl
-function helperAdapter(data: SimulationData) {
-  const history = {
-    addEvent: <Event extends HistoryEvents>(event: Event, payload: HistoryEventPayloads[Event], ts?: number) => {
-      data.history.data.push(createHistoryEvent(event, payload, ts));
-    }
-  }
-  return {
-    order: {
-      getWithStatus: (status: Order['status'], arr = data.orders) => {
-        return arr.filter(order => order.status === status);
-      },
+  data.drones.push(drone);
+  data.analytics.droneCount = data.drones.length;
 
-      getWithId: (id: number, arr = data.orders) => {
-        return arr[id]
-      }
-    },
-    drone: {
-      getWithStatus: (status: Drone['status'], arr = data.drones) => {
-        return arr.filter(drone => drone.status === status);
-      },
-
-      getWithId: (id: number, arr = data.drones) => {
-        return arr[id];
-      },
-
-      sendToOrder: (drone: Drone, droneWarehouse: Warehouse, order: Order, distance: number, ts = Date.now()) => {
-        drone.status = 'delivering';
-        drone.statusData = {
-          delivering: {
-            distance,
-            orderId: order.id,
-            startedAt: ts,
-            distanceCovered: 0
-          }
-        }
-
-        history.addEvent('drone-sent', {
-          order,
-          droneId: drone.id,
-          warehouseId: droneWarehouse.id,
-          distance,
-        })
-
-        order.status = 'assigned';
-        order.statusData = {
-          assigned: {
-            droneId: drone.id,
-            startedAt: ts
-          }
-        }
-
-        droneWarehouse.droneIds = droneWarehouse.droneIds.filter(id => id !== drone.id);
-      },
-
-      updateBatteryCharge: (drone: Drone, programDiff: number) => {
-        const currentCharge = drone.battery.currentCharge;
-        const maxCharge = drone.battery.capacity;
-
-        if (currentCharge === maxCharge) return drone;
-
-        const chargeRate = maxCharge / WAREHOUSE_TIME_FOR_FULL_CHARGE;
-        const newCharge = currentCharge + chargeRate * programDiff;
-
-        // math.min to prevent overcharging
-        drone.battery.currentCharge = Math.min(maxCharge, newCharge);
-
-        data.drones[drone.id] = drone;
-      }
-    },
-    warehouse: {
-      getWithId: (id: number, arr = data.warehouses) => {
-        return arr[id];
-      },
-      getNearest: (position: Position, arr = data.warehouses) => {
-        return arr.map((warehouse, id) => ({
-          warehouse,
-          id,
-          distance: distanceBetween(warehouse.position, position)
-        })).reduce((acc, curr) => {
-          if (acc.distance < curr.distance) return acc;
-          return curr;
-        })
-      }
-    },
-    history,
-  }
-}
-
-export function updateDroneBatteryCharge(drone: Drone, programDiff: number) {
-  const currentCharge = drone.battery.currentCharge;
-  const maxCharge = drone.battery.capacity;
-
-  if (currentCharge === maxCharge) return drone;
-
-  const chargeRate = maxCharge / WAREHOUSE_TIME_FOR_FULL_CHARGE;
-  const newCharge = currentCharge + chargeRate * programDiff;
-
-  // math.min to prevent overcharging
-  drone.battery.currentCharge = Math.min(maxCharge, newCharge);
-
-  return drone;
+  return drone
 }
 
 export function simulationTick(data: SimulationData): SimulationData {
@@ -155,12 +53,10 @@ export function simulationTick(data: SimulationData): SimulationData {
   const diff = now - data.history._meta.lastFetched;
   const programDiff = diff / data.timeFactorMs;
 
-  const helpers = helperAdapter(data);
-
-  console.log('orders', data.orders.length)
+  const db = memoryDb(data);
 
   // update returning drones(they are returning to the warehouse after delivering the order)
-  for (let drone of helpers.drone.getWithStatus('returning')) {
+  for (let drone of db.drone.getWithStatus('returning')) {
     const { goingTo, startedAt, order, distance, distanceCovered } = drone.statusData.returning!;
     const timeElapsed = now - startedAt;
 
@@ -168,7 +64,7 @@ export function simulationTick(data: SimulationData): SimulationData {
     const newDistanceCovered = distanceCovered + distanceCoveredThisTick;
 
     if (newDistanceCovered >= distance) {
-      const warehouse = helpers.warehouse.getWithId(goingTo.warehouseId);
+      const warehouse = db.warehouse.getWithId(goingTo.warehouseId);
       warehouse.droneIds.push(drone.id);
 
       drone.status = 'idle';
@@ -179,7 +75,7 @@ export function simulationTick(data: SimulationData): SimulationData {
         }
       }
 
-      helpers.history.addEvent('drone-returned', {
+      db.history.addEvent('drone-returned', {
         droneId: drone.id,
         warehouseId: warehouse.id
       })
@@ -188,22 +84,25 @@ export function simulationTick(data: SimulationData): SimulationData {
     }
 
     drone.statusData.returning!.distanceCovered = newDistanceCovered;
-    updateDroneBatteryCharge(drone, programDiff);
+    db.drone.updateBatteryCharge(drone, programDiff);
   };
 
   // update delivering drones
-  for (let drone of helpers.drone.getWithStatus('delivering')) {
+  for (let drone of db.drone.getWithStatus('delivering')) {
     const { distance, distanceCovered, startedAt, orderId } = drone.statusData.delivering!;
     const timeElapsed = now - startedAt;
 
     const distanceCoveredThisTick = timeElapsed / data.timeFactorMs;
 
-    console.log('delivering distanceCoveredThisTick', distanceCoveredThisTick)
     const newDistanceCovered = distanceCovered + distanceCoveredThisTick;
 
     if (newDistanceCovered >= distance) {
-      const order = helpers.order.getWithId(orderId);
-      const { warehouse, distance } = helpers.warehouse.getNearest(order.customer.coordinates)
+      const order = db.order.getWithId(orderId);
+      if (!order) {
+        console.error(`tried accessing null order ${orderId}`)
+        continue;
+      }
+      const { warehouse, distance } = db.warehouse.getNearest(order.customer.coordinates)
 
       drone.status = 'returning';
       drone.statusData = {
@@ -221,32 +120,33 @@ export function simulationTick(data: SimulationData): SimulationData {
       // filter out the order
       data.orders = data.orders.filter(o => o.id !== orderId);
 
-      helpers.history.addEvent('order-fulfilled', {
-        order,
+      db.history.addEvent('order-fulfilled', {
+        order: {
+          customerId: order.customer.id,
+          productList: order.productList
+        },
         droneId: drone.id,
       })
 
-
       data.analytics.openOrders = data.orders.length;
+      data.analytics.hasOpenOrders = data.orders.length > 0;
 
       data.analytics.totalOrdersDelivered++;
-      data.analytics.totalDistance += distance;
+      data.analytics.totalDistanceCovered += distance;
 
-      data.analytics.averageDistancePerOrder = data.analytics.totalDistance / data.analytics.totalOrdersDelivered;
-      data.analytics.averageDistancePerDrone = data.analytics.totalDistance / data.drones.length;
+      const totalDistance = data.analytics.totalDistanceCovered;
+      data.analytics.averageDistancePerOrder = totalDistance / data.analytics.totalOrdersDelivered;
+      data.analytics.averageDistancePerDrone = totalDistance / data.drones.length;
 
       continue;
     }
 
     drone.statusData.delivering!.distanceCovered = newDistanceCovered;
-    // TODO: currently not updating battery
-    updateDroneBatteryCharge(drone, programDiff);
+    db.drone.updateBatteryCharge(drone, programDiff);
   }
 
-  // check for pending orders 
-
-  for (let order of helpers.order.getWithStatus('pending')) {
-    const { warehouse, distance } = helpers.warehouse.getNearest(order.customer.coordinates)
+  for (let order of db.order.getWithStatus('pending')) {
+    const { warehouse, distance } = db.warehouse.getNearest(order.customer.coordinates)
 
     // if there are no drones, create one and send it to the order
     if (data.drones.length === 0) {
@@ -267,20 +167,23 @@ export function simulationTick(data: SimulationData): SimulationData {
         }
       })
 
-      helpers.drone.sendToOrder(drone, warehouse, order, distance, now);
-
-      data.drones.push(drone);
+      db.drone.sendToOrder(db.history, drone, warehouse, order, distance, now);
 
       continue;
     }
 
     // if there are drones, check if any of them are available
-    const dronesInWarehouse = warehouse.droneIds.map(id => updateDroneBatteryCharge(helpers.drone.getWithId(id), programDiff));
+    const dronesInWarehouse = warehouse.droneIds.map(id => {
+      const drone = db.drone.getWithId(id)
+      db.drone.updateBatteryCharge(drone, programDiff);
+      return drone;
+    });
+
     const availableDrone = dronesInWarehouse.find(drone => drone.status === 'idle' && drone.battery.currentCharge > distance * 2);
 
     if (availableDrone) {
       console.debug('found available drone', availableDrone.id)
-      helpers.drone.sendToOrder(availableDrone, warehouse, order, distance, now);
+      db.drone.sendToOrder(db.history, availableDrone, warehouse, order, distance, now);
       continue
     }
 
@@ -295,7 +198,7 @@ export function simulationTick(data: SimulationData): SimulationData {
       console.debug('timeElapsed', timeElapsed + RESUPPLY_DELAY)
       if (timeUntilReturn < timeElapsed + RESUPPLY_DELAY) {
         console.debug('found returning drone', returningDrone.id)
-        helpers.drone.sendToOrder(returningDrone, warehouse, order, distance, now);
+        db.drone.sendToOrder(db.history, returningDrone, warehouse, order, distance, now);
         continue;
       }
     }
@@ -318,10 +221,9 @@ export function simulationTick(data: SimulationData): SimulationData {
       }
     })
 
-    helpers.drone.sendToOrder(drone, warehouse, order, distance, now);
-
-    data.drones.push(drone);
+    db.drone.sendToOrder(db.history, drone, warehouse, order, distance, now);
   }
+
   data.history._meta.lastFetched = now;
 
   return data;

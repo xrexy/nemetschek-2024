@@ -12,7 +12,6 @@ import { ProductMap } from "../types/product";
 import { SimulationData, SimulationDeliveryStatus, SimulationOutput } from "../types/simulation";
 import { InputWarehouse, Warehouse } from "../types/warehouse";
 import { DroneBattery } from "../types/drone-battery";
-import { createHistoryEvent } from "../types/history";
 
 export const simulationController = new Elysia({
   prefix: "/simulation",
@@ -45,6 +44,7 @@ export const simulationController = new Elysia({
     }
 
     const data: SimulationData = {
+      slug,
       drones: [],
       history: {
         data: [],
@@ -53,12 +53,13 @@ export const simulationController = new Elysia({
 
       analytics: {
         openOrders: body.orders.length,
+        hasOpenOrders: body.orders.length > 0,
 
         droneCount: 0,
         totalOrdersDelivered: 0,
         averageDistancePerDrone: 0,
         averageDistancePerOrder: 0,
-        totalDistance: 0,
+        totalDistanceCovered: 0,
       },
 
       batteries: body.typesOfDrones.map(parseToBattery),
