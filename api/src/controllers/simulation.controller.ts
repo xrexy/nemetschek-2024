@@ -6,12 +6,16 @@ import { generateSlug } from 'random-word-slugs';
 import { InputChargingStation } from "../types/charging-station";
 import { Customer } from "../types/customer";
 import { InputDroneType } from "../types/drone";
+import { DroneBattery } from "../types/drone-battery";
 import { InputOrder, Order } from "../types/order";
 import { Position } from "../types/position";
 import { ProductMap } from "../types/product";
 import { SimulationData, SimulationDeliveryStatus, SimulationOutput } from "../types/simulation";
 import { InputWarehouse, Warehouse } from "../types/warehouse";
-import { DroneBattery } from "../types/drone-battery";
+import { calculateSimulationTickSpeed, calculateSimulationTime, simulationTick } from "../utils/simulation";
+
+const SIMULATION_TICK_OFFSET = 50;
+const SIMULATION_TICK_MIN = 500;
 
 export const simulationController = new Elysia({
   prefix: "/simulation",
@@ -88,6 +92,31 @@ export const simulationController = new Elysia({
     }
 
     ctx.store.data[slug] = data;
+
+    const tickSpeed = calculateSimulationTickSpeed(data);
+    function getData(s: string) {
+      let data = ctx.store.data[s];
+      if (!data) return;
+
+      const { diff, now, programDiff } = calculateSimulationTime(data);
+      const missedTicks = Math.floor(diff / tickSpeed);
+
+      if (missedTicks > 1) {
+        // TODO: handle missed ticks, not sure what to with them yet
+        // everything is in memory, and "simulationTick" implemantation is designed to handle missed ticks
+        // also not as simple as just calling "simulationTick" multiple times, as it's not idempotent
+        ctx.log.debug(`missed ${missedTicks - 1} ticks for slug ${s}`);
+      }
+
+      data = simulationTick(data, { now, diff, programDiff });
+      ctx.store.data[s] = data;
+
+      return data;
+    }
+
+    // internally update the simulation data, so both /online and /ws/:slug can access it
+    console.debug(Math.max((tickSpeed - SIMULATION_TICK_OFFSET)))
+    setInterval(() => getData(slug), Math.max((tickSpeed - SIMULATION_TICK_OFFSET), SIMULATION_TICK_MIN))
 
     return { status: "Created new simulation. Use /api/v1/simulation/online to see all online simulations.", slug }
   }, {

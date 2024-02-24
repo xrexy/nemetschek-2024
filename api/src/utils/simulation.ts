@@ -48,12 +48,24 @@ export function createDrone(o: {
   return drone
 }
 
-export function simulationTick(data: SimulationData, time: {
+export function calculateSimulationTime(data: SimulationData) {
+  const now = Date.now();
+  const diff = now - data.history._meta.lastFetched;
+  const programDiff = diff / data.timeFactorMs;
+
+  return { now, diff, programDiff }
+}
+
+export function calculateSimulationTickSpeed(data: SimulationData) {
+  return data.deliveryStatus.frequency * data.timeFactorMs;
+}
+
+export function simulationTick(data: SimulationData, time?: {
   now: number,
   diff: number,
   programDiff: number,
 }): SimulationData {
-  const { diff, now, programDiff } = time;
+  const { now, programDiff } = time ?? calculateSimulationTime(data);
 
   const db = memoryDb(data);
 
