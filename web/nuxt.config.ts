@@ -4,5 +4,6 @@ export default defineNuxtConfig({
   modules: ["@nuxtjs/tailwindcss", "shadcn-nuxt", "@nuxtjs/google-fonts"],
   tailwindcss: { viewer: false },
   shadcn: { prefix: '' },
-  googleFonts: { families: { Inter: '400..700', } }
+  googleFonts: { families: { Inter: '400..700', } },
+  ssr: false,
 })
