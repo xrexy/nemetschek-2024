@@ -37,6 +37,15 @@ export type SimulationData = {
   chargingStations: ChargingStation[],
   deliveryStatus: SimulationDeliveryStatus,
   timeFactorMs: number,
-  history: History
-  initialized: boolean,
+  history: History,
+  analytics: {
+    openOrders: number,
+    droneCount: number,
+
+    totalOrdersDelivered: number,
+    totalDistance: number,
+
+    averageDistancePerOrder: number,
+    averageDistancePerDrone: number,
+  }
 }

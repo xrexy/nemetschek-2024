@@ -45,11 +45,20 @@ export const simulationController = new Elysia({
     }
 
     const data: SimulationData = {
-      initialized: false,
       drones: [],
       history: {
         data: [],
         _meta: { lastFetched: Date.now() }
+      },
+
+      analytics: {
+        openOrders: body.orders.length,
+
+        droneCount: 0,
+        totalOrdersDelivered: 0,
+        averageDistancePerDrone: 0,
+        averageDistancePerOrder: 0,
+        totalDistance: 0,
       },
 
       batteries: body.typesOfDrones.map(parseToBattery),
@@ -92,24 +101,4 @@ export const simulationController = new Elysia({
       typesOfDrones: t.Array(InputDroneType),
       chargingStations: t.Array(InputChargingStation)
     })
-  })
-  .post('/initialize/:slug', ctx => {
-    const { slug } = ctx.params;
-    const data = ctx.store.data[slug];
-    if (!data) {
-      ctx.set.status = 'Bad Request';
-      return { status: "Simulation not found." }
-    }
-
-    if(data.initialized) {
-      ctx.set.status = 'Bad Request';
-      return { status: "Simulation already initialized." }
-    }
-
-    data.history.data.push(createHistoryEvent('initialized', {}))
-
-    data.initialized = true;
-
-    data.history._meta.lastFetched = Date.now();
-    ctx.store.data[slug] = data;
   })

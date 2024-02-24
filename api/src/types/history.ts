@@ -2,19 +2,27 @@ import type { Drone } from "./drone"
 import type { Order } from "./order"
 import type { Warehouse } from "./warehouse"
 
-export type HistoryEvents = 'initialized' | 'drone-created' | 'drone-sent' | 'order-fulfilled'
+export type HistoryEvents = 'created' | 'drone-created' | 'drone-returned' | 'drone-sent' | 'order-fulfilled'
 
 export interface HistoryEventPayloads {
-  initialized: {},
+  created: {},
+
   'drone-created': {
     droneId: number
   },
+
+  'drone-returned': {
+    droneId: number,
+    warehouseId: number
+  },
+
   'drone-sent': {
     droneId: number,
     order: Order,
     warehouseId: number
     distance: number;
   },
+
   'order-fulfilled': {
     order: Order,
     droneId: number
@@ -30,6 +38,7 @@ export interface HistoryEvent<Event extends HistoryEvents> {
 }
 
 export function createHistoryEvent<Event extends HistoryEvents>(event: Event, payload: HistoryEventPayloads[Event], ts = Date.now()): HistoryEvent<Event> {
+  console.debug(`Creating history event: ${event}`)
   return {
     event,
     payload,

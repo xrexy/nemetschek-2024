@@ -10,8 +10,6 @@ import { Warehouse } from "../types/warehouse";
 export const WAREHOUSE_TIME_FOR_FULL_CHARGE = 20;
 export const RESUPPLY_DELAY = 20;
 
-
-
 export function findCheapestBattery(batteries: SimulationData['batteries'], distance: number, weight: number) {
   return batteries.reduce((acc, curr) => {
     const cost = curr.consumption * distance * weight;
@@ -32,11 +30,18 @@ export function createDrone(o: {
   console.error('CREATING DRONE')
   const { data, droneData, distance, packageWeight } = o;
 
+  const id = data.drones.length;
   const { battery } = findCheapestBattery(data.batteries, distance, packageWeight);
+
+  data.history.data.push(createHistoryEvent('drone-created', { droneId: id }))
+
+  console.debug('dc', data.analytics.droneCount)
+  data.analytics.droneCount++;
+  console.debug('dc1', data.analytics.droneCount)
 
   return {
     battery,
-    id: data.drones.length,
+    id,
     ...droneData
   }
 }
@@ -152,6 +157,8 @@ export function simulationTick(data: SimulationData): SimulationData {
 
   const helpers = helperAdapter(data);
 
+  console.log('orders', data.orders.length)
+
   // update returning drones(they are returning to the warehouse after delivering the order)
   for (let drone of helpers.drone.getWithStatus('returning')) {
     const { goingTo, startedAt, order, distance, distanceCovered } = drone.statusData.returning!;
@@ -171,6 +178,11 @@ export function simulationTick(data: SimulationData): SimulationData {
           arrivedAt: now
         }
       }
+
+      helpers.history.addEvent('drone-returned', {
+        droneId: drone.id,
+        warehouseId: warehouse.id
+      })
 
       continue;
     }
@@ -207,12 +219,21 @@ export function simulationTick(data: SimulationData): SimulationData {
       };
 
       // filter out the order
-      data.orders.filter(o => o.id !== orderId);
+      data.orders = data.orders.filter(o => o.id !== orderId);
 
       helpers.history.addEvent('order-fulfilled', {
         order,
         droneId: drone.id,
       })
+
+
+      data.analytics.openOrders = data.orders.length;
+
+      data.analytics.totalOrdersDelivered++;
+      data.analytics.totalDistance += distance;
+
+      data.analytics.averageDistancePerOrder = data.analytics.totalDistance / data.analytics.totalOrdersDelivered;
+      data.analytics.averageDistancePerDrone = data.analytics.totalDistance / data.drones.length;
 
       continue;
     }
@@ -246,10 +267,6 @@ export function simulationTick(data: SimulationData): SimulationData {
         }
       })
 
-      helpers.history.addEvent('drone-created', {
-        droneId: drone.id
-      })
-
       helpers.drone.sendToOrder(drone, warehouse, order, distance, now);
 
       data.drones.push(drone);
@@ -262,9 +279,48 @@ export function simulationTick(data: SimulationData): SimulationData {
     const availableDrone = dronesInWarehouse.find(drone => drone.status === 'idle' && drone.battery.currentCharge > distance * 2);
 
     if (availableDrone) {
+      console.debug('found available drone', availableDrone.id)
       helpers.drone.sendToOrder(availableDrone, warehouse, order, distance, now);
       continue
     }
+
+    // if there are no available drones, check if any of them are returning
+    const returningDrone = dronesInWarehouse.find(drone => drone.status === 'returning' && drone.battery.currentCharge > distance * 2);
+    if (returningDrone) {
+      const { startedAt, order, distance, distanceCovered } = returningDrone.statusData.returning!;
+      const timeUntilReturn = (distance - distanceCovered) * data.timeFactorMs;
+      const timeElapsed = now - startedAt;
+
+      console.debug('timeUntilReturn', timeUntilReturn)
+      console.debug('timeElapsed', timeElapsed + RESUPPLY_DELAY)
+      if (timeUntilReturn < timeElapsed + RESUPPLY_DELAY) {
+        console.debug('found returning drone', returningDrone.id)
+        helpers.drone.sendToOrder(returningDrone, warehouse, order, distance, now);
+        continue;
+      }
+    }
+
+    // if there are no returning drones, create a new one
+    const drone = createDrone({
+      distance,
+      data,
+      packageWeight: order.weight,
+      droneData: {
+        status: 'delivering',
+        statusData: {
+          delivering: {
+            distance,
+            orderId: order.id,
+            startedAt: now,
+            distanceCovered: 0,
+          }
+        }
+      }
+    })
+
+    helpers.drone.sendToOrder(drone, warehouse, order, distance, now);
+
+    data.drones.push(drone);
   }
   data.history._meta.lastFetched = now;
 
