@@ -69,6 +69,10 @@ export function simulationTick(data: SimulationData, time?: {
 
   const db = memoryDb(data);
 
+  for (let drone of db.drone.getWithStatus('idle')) {
+    db.drone.updateBatteryCharge(db, drone, programDiff);
+  }
+
   // update returning drones(they are returning to the warehouse after delivering the order)
   for (let drone of db.drone.getWithStatus('returning')) {
     const { goingTo, startedAt, order, distance, distanceCovered } = drone.statusData.returning!;
@@ -98,7 +102,7 @@ export function simulationTick(data: SimulationData, time?: {
     }
 
     drone.statusData.returning!.distanceCovered = newDistanceCovered;
-    db.drone.updateBatteryCharge(drone, programDiff);
+    db.drone.updateBatteryCharge(db, drone, programDiff);
   };
 
   // update delivering drones
@@ -156,7 +160,7 @@ export function simulationTick(data: SimulationData, time?: {
     }
 
     drone.statusData.delivering!.distanceCovered = newDistanceCovered;
-    db.drone.updateBatteryCharge(drone, programDiff);
+    db.drone.updateBatteryCharge(db, drone, programDiff);
   }
 
   for (let order of db.order.getWithStatus('pending')) {
@@ -189,7 +193,7 @@ export function simulationTick(data: SimulationData, time?: {
     // if there are drones, check if any of them are available
     const dronesInWarehouse = warehouse.droneIds.map(id => {
       const drone = db.drone.getWithId(id)
-      db.drone.updateBatteryCharge(drone, programDiff);
+      db.drone.updateBatteryCharge(db, drone, programDiff);
       return drone;
     });
 

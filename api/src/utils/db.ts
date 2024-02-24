@@ -9,6 +9,13 @@ import type { SimulationData } from "../types/simulation";
 import type { Warehouse } from "../types/warehouse";
 import type { Position } from "../types/position";
 
+type DB = {
+  history: ReturnType<typeof memoryDbHistory>,
+  order: ReturnType<typeof memoryDbOrder>,
+  drone: ReturnType<typeof memoryDbDrone>,
+  warehouse: ReturnType<typeof memoryDbWarehouse>
+}
+
 export const memoryDbHistory = (data: SimulationData) => ({
   addEvent: <Event extends HistoryEvents>(event: Event, payload: HistoryEventPayloads[Event], ts?: number) => {
     console.debug(`[${data.slug}] Created history event: ${event}`)
@@ -36,7 +43,7 @@ export const memoryDbDrone = (data: SimulationData) => ({
     return arr[id];
   },
 
-  sendToOrder: (history: ReturnType<typeof memoryDbHistory>, drone: Drone, droneWarehouse: Warehouse, order: Order, distance: number, ts = Date.now()) => {
+  sendToOrder: (history: DB['history'], drone: Drone, droneWarehouse: Warehouse, order: Order, distance: number, ts = Date.now()) => {
     drone.status = 'delivering';
     drone.statusData = {
       delivering: {
@@ -68,20 +75,60 @@ export const memoryDbDrone = (data: SimulationData) => ({
     droneWarehouse.droneIds = droneWarehouse.droneIds.filter(id => id !== drone.id);
   },
 
-  updateBatteryCharge: (drone: Drone, programDiff: number) => {
+  updateBatteryCharge: ({ order: orderDb, history }: {
+    order: DB['order'],
+    history: DB['history']
+  }, drone: Drone, programDiff: number) => {
     const currentCharge = drone.battery.currentCharge;
     const maxCharge = drone.battery.capacity;
 
-    if (currentCharge === maxCharge) return drone;
+    // if idle(in warehouse), calculate how much it's charged
+    if (drone.status === 'idle') {
+      if (drone.battery.currentCharge === maxCharge) return;
 
-    const chargeRate = maxCharge / WAREHOUSE_TIME_FOR_FULL_CHARGE;
-    const newCharge = currentCharge + chargeRate * programDiff;
+      const chargePerTick = maxCharge / WAREHOUSE_TIME_FOR_FULL_CHARGE; // 20 program minutes = full charge
+      const chargedInThisTick = chargePerTick * programDiff;
 
-    // math.min to prevent overcharging
-    drone.battery.currentCharge = Math.min(maxCharge, newCharge);
-    console.debug('updated battery charge', maxCharge, newCharge, drone.battery.currentCharge)
+      drone.battery.currentCharge += chargedInThisTick;
 
-    data.drones[drone.id] = drone;
+      if (drone.battery.currentCharge >= maxCharge) {
+        drone.battery.currentCharge = maxCharge;
+      }
+
+      history.addEvent('drone-battery-update', {
+        droneId: drone.id,
+        newCharge: drone.battery.currentCharge,
+        oldCharge: currentCharge
+      })
+    }
+
+    // if travelling, calculate how much it's consumed
+    if (drone.status === 'delivering' || drone.status === 'returning') {
+      const { distanceCovered, distance } = drone.statusData[drone.status]!;
+      const orderId = drone.statusData.delivering?.orderId
+      const order = orderId ? orderDb.getWithId(orderId)! : undefined;
+
+      const consumptionPerDistance = drone.battery.consumption;
+      const weight = order?.weight ?? 0;
+      const distanceBatteryConsumption = distanceCovered / distance * consumptionPerDistance;
+      const weightBatteryConsumption = weight;
+
+      const totalBatteryConsumption = distanceBatteryConsumption + weightBatteryConsumption;
+
+      drone.battery.currentCharge -= totalBatteryConsumption;
+
+      history.addEvent('drone-battery-update', {
+        droneId: drone.id,
+        newCharge: drone.battery.currentCharge,
+        oldCharge: currentCharge
+      })
+
+      if (drone.battery.currentCharge <= 0) {
+        console.error(`Drone ${drone.id} ran out of battery!`)
+      }
+    }
+
+
   }
 })
 
