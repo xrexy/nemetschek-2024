@@ -1,9 +1,18 @@
 <template>
-  <Button variant="destructive">test</Button>
+  <div class="flex flex-col items-center justify-start gap-4">
+    <h1 class="font-mono font-black text-4xl">Online Simulations</h1>
+
+    <p class="opacity-50" v-if="online.length === 0">
+      There are no online simulations available at the moment.
+    </p>
+
+    <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <SimulationCard v-for="simulation in online" :key="simulation" :simulation="simulation" />
+    </div>
+
+  </div>
 </template>
 
-<script setup>
-import { test } from 'lib'
-
-console.log("TESt", test(1, 2))
+<script setup lang="ts">
+const online = useOnlineSimulations()
 </script>

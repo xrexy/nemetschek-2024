@@ -23,7 +23,15 @@ export const simulationController = new Elysia({
 })
   .use(ctx)
   .get('/online', ctx => {
-    return { data: Object.entries(ctx.store.data) }
+    return {
+      res: Object.entries(ctx.store.data).map(([slug, data]) => ({
+        analytics: data.analytics,
+        warehouses: data.warehouses,
+        drones: data.drones,
+        timeFactorMs: data.timeFactorMs,
+        slug,
+      }))
+    }
   })
   .post('/new', ctx => {
     const slug = generateSlug(3)

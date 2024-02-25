@@ -104,6 +104,7 @@ export const memoryDbDrone = (data: SimulationData) => ({
 
     // if travelling, calculate how much it's consumed
     if (drone.status === 'delivering' || drone.status === 'returning') {
+      // TODO: not being calculated properly
       const { distanceCovered, distance } = drone.statusData[drone.status]!;
       const orderId = drone.statusData.delivering?.orderId
       const order = orderId ? orderDb.getWithId(orderId)! : undefined;

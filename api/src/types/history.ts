@@ -36,13 +36,13 @@ export interface HistoryEventPayloads {
   }
 }
 
-export interface HistoryEvent<Event extends HistoryEvents> {
+export interface HistoryEntry<Event extends HistoryEvents> {
   event: Event,
   payload: HistoryEventPayloads[Event],
   createdAt: number
 }
 
-export function createHistoryEvent<Event extends HistoryEvents>(event: Event, payload: HistoryEventPayloads[Event], ts = Date.now()): HistoryEvent<Event> {
+export function createHistoryEvent<Event extends HistoryEvents>(event: Event, payload: HistoryEventPayloads[Event], ts = Date.now()): HistoryEntry<Event> {
   return {
     event,
     payload,
@@ -51,7 +51,7 @@ export function createHistoryEvent<Event extends HistoryEvents>(event: Event, pa
 }
 
 export type History = {
-  data: HistoryEvent<HistoryEvents>[],
+  data: HistoryEntry<HistoryEvents>[],
   _meta: {
     lastFetched: number
   }

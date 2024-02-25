@@ -1,10 +1,9 @@
-import { t } from "elysia"
 import { Static } from '@sinclair/typebox';
+import { t } from "elysia";
 
-import { Position } from "./position";
-import { Order } from "./order";
-import { Warehouse } from "./warehouse";
 import { DroneBattery, DroneBatteryType } from "./drone-battery";
+import { Order } from "./order";
+import { Position } from "./position";
 
 export const DroneStatus = t.Union([
   t.Literal('pre-deployment'),

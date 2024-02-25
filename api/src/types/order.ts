@@ -1,7 +1,6 @@
-import { t } from "elysia"
 import type { Static } from '@sinclair/typebox';
+import { t } from "elysia";
 
-import { Position } from "./position";
 import { Customer } from "./customer";
 
 export const ProductList = t.Record(t.String(), t.Number({ minimum: 1 }))

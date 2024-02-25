@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@bogeychan/elysia-logger": "^0.0.17",
+    "@elysiajs/cors": "^0.8.0",
     "elysia": "latest",
     "pino-pretty": "^10.3.1",
     "random-word-slugs": "^0.1.7",
