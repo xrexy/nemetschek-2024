@@ -5,6 +5,7 @@
     <SimulationAddOrderDialog />
     <SimulationAddCustomerDialog />
     <SimulationAddWarehouseDialog />
+    <SimulationAddProductDialog />
     
     <Toaster />
     <AppHeader />

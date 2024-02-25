@@ -32,3 +32,4 @@ export const useDroneStatusDialog = () => useDialog<{ drones: Drone[], slug: str
 export const useAddOrderDialog = () => useDialog<{ add: (order: InputOrder) => void, products: ProductList, customers: Customer[], slug: string }>('add-order')
 export const useAddWarehouseDialog = () => useDialog<{ add: (warehouse: Position & { name: string }) => void, slug: string }>('add-warehouse')
 export const useAddCustomerDialog = () => useDialog<{ add: (customer: Customer) => void, customers: Customer[], slug: string }>('add-customer')
+export const useAddProductDialog = () => useDialog<{ add: (product: { name: string, weight: number }) => void, slug: string }>('add-product')

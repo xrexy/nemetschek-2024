@@ -99,7 +99,7 @@ export const simulationController = new Elysia({
         productList: order.productList,
         status: 'pending',
         statusData: { pending: {} },
-        weight: Object.values(order.productList).reduce((acc, curr) => acc + curr, 0)
+        weight: Object.entries(order.productList).reduce((acc, [name, count]) => acc + (order.productList[name] * count), 0)
       } satisfies Order))
     }
 

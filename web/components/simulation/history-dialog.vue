@@ -113,12 +113,21 @@ function aggregateEvent(entry: HistoryEntry<HistoryEvents>): AggregatedData {
     }
   }
 
-  if(isHistoryEvent(entry, 'customer-added')) {
-    const { customer: {id, name} } = entry.payload;
+  if (isHistoryEvent(entry, 'customer-added')) {
+    const { customer: { id, name } } = entry.payload;
     return {
       event: entry.event,
       timestamp: entry.createdAt,
       text: `Customer #${id} added with name ${name}`
+    }
+  }
+
+  if (isHistoryEvent(entry, 'product-added')) {
+    const { product: { name, weight } } = entry.payload
+    return {
+      event: entry.event,
+      timestamp: entry.createdAt,
+      text: `Product ${name} added with weight ${weight}g.`
     }
   }
 

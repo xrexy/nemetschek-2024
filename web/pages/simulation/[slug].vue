@@ -72,9 +72,23 @@
             </Button>
           </div>
           <div class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-2">
-            <SimulationItem :key="name" v-for="{ name, coordinates } in simulation.customers"
-              :title="name" :stats="[
-                { label: 'Location', icon: 'material-symbols:pin-drop-outline', value: `X: ${coordinates.x}; Y: ${coordinates.y}` },
+            <SimulationItem :key="name" v-for="{ name, coordinates } in simulation.customers" :title="name" :stats="[
+              { label: 'Location', icon: 'material-symbols:pin-drop-outline', value: `X: ${coordinates.x}; Y: ${coordinates.y}` },
+            ]" />
+          </div>
+        </div>
+
+        <div>
+          <div class="w-full flex items-center justify-between">
+            <p class="font-semibold text-xl pb-2">Products</p>
+            <Button @click="dialogs.open('addProduct')" variant="link">
+              Add Product
+            </Button>
+          </div>
+          <div class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-2">
+            <SimulationItem :key="name" v-for="([name, weight]) in Object.entries(simulation.products)"
+              :title="capitalize(name)" :stats="[
+                { label: 'Weight', icon: 'material-symbols:weight-outline', value: `${format(weight)}g.` },
               ]" />
           </div>
         </div>
@@ -163,24 +177,12 @@ onBeforeMount(() => {
         return;
       }
 
-      if (data.event === 'add-order') {
+      const dataEvent = data.event;
+      if (['add-order', 'add-customer', 'add-warehouse', 'add-product'].includes(dataEvent)) {
+        const added = dataEvent.split('-')[1] as string;
         toast({
-          title: "Order Added",
-          description: "The order has been added to the simulation.",
-        })
-      }
-
-      if (data.event === 'add-warehouse') {
-        toast({
-          title: "Warehouse Added",
-          description: "The warehouse has been added to the simulation.",
-        })
-      }
-
-      if (data.event === 'add-customer') {
-        toast({
-          title: "Customer Added",
-          description: "The customer has been added to the simulation.",
+          title: `${capitalize(added)} Added`,
+          description: `The ${added.toLowerCase()} has been added to the simulation.`,
         })
       }
     } catch (e) {
@@ -194,6 +196,7 @@ function useDialogs() {
   const addOrderDialog = useAddOrderDialog();
   const addWarehouseDialog = useAddWarehouseDialog();
   const addCustomerDialog = useAddCustomerDialog();
+  const addProductDialog = useAddProductDialog()
 
   const droneStatusDialog = useDroneStatusDialog();
   const historyDialog = useHistoryDialog();
@@ -267,8 +270,38 @@ function useDialogs() {
     });
   }
 
+  function openAddProductDialog() {
+    if (!simulation.value) return;
+
+    addProductDialog.open({
+      add: (product) => {
+        if (socket.readyState !== WebSocket.OPEN) {
+          toast({
+            title: "Error",
+            description: "The simulation is not ready yet.",
+          });
+          return;
+        }
+
+        if (simulation.value?.products.hasOwnProperty(product.name)) {
+          toast({
+            title: "Error",
+            description: "The product already exists.",
+          });
+          return;
+        }
+
+        socket.send(JSON.stringify({
+          event: 'add-product',
+          payload: product,
+        }));
+      },
+      slug,
+    });
+  }
+
   return {
-    open: (type: 'history' | 'addOrder' | 'droneStatus' | 'addWarehouse' | 'addCustomer') => {
+    open: (type: 'history' | 'addOrder' | 'droneStatus' | 'addWarehouse' | 'addCustomer' | 'addProduct') => {
       if (type === 'history') {
         if (!simulation.value?.history) return;
 
@@ -302,6 +335,11 @@ function useDialogs() {
 
       if (type === 'addCustomer') {
         openAddCustomerDialog()
+        return;
+      }
+
+      if (type === 'addProduct') {
+        openAddProductDialog()
         return;
       }
 

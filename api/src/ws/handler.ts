@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { ctx } from "../context";
 import { calculateSimulationTickSpeed, parseInputOrder } from "../utils/simulation";
-import { InputOrder } from "../types/order";
+import { InputOrder, ProductList } from "../types/order";
 import { memoryDb, memoryDbHistory, memoryDbWarehouse } from "../utils/db";
 import { Position } from "../types/position";
 import { assetNever } from "../types/utility";
@@ -102,6 +102,22 @@ export const ws = new Elysia({
         return;
       }
 
+      if (message.event === 'add-product') {
+        const { payload } = message;
+
+        data.products = {
+          ...data.products,
+          [payload.name]: payload.weight
+        }
+
+        db.history.addEvent('product-added', {
+          product: { ...payload }
+        })
+
+        ws.send({ ok: true, message: "Product added", event: message.event });
+        return;
+      }
+
       assetNever(message)
     },
     body: t.Union([
@@ -116,6 +132,13 @@ export const ws = new Elysia({
       t.Object({
         event: t.Literal('add-customer'),
         payload: Customer,
+      }),
+      t.Object({
+        event: t.Literal('add-product'),
+        payload: t.Object({
+          name: t.String(),
+          weight: t.Number({ min: 1 }),
+        })
       })
     ])
   })

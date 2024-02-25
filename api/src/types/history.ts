@@ -1,7 +1,7 @@
 import type { Order } from "./order"
 import type { Position } from "./position"
 
-export type HistoryEvents = 'created' | 'warehouse-added' | 'customer-added' | 'drone-created' | 'drone-battery-update' | 'drone-returned' | 'drone-sent' | 'order-fulfilled' | 'order-added'
+export type HistoryEvents = 'created' | 'warehouse-added' | 'customer-added' | 'drone-created' | 'drone-battery-update' | 'drone-returned' | 'drone-sent' | 'order-fulfilled' | 'order-added' | 'product-added'
 type MinimalOrder = { customerId: number } & Pick<Order, 'productList' | 'id'>
 
 export interface HistoryEventPayloads {
@@ -49,6 +49,13 @@ export interface HistoryEventPayloads {
     customer: {
       name: string,
       id: number,
+    }
+  }
+
+  'product-added': {
+    product: {
+      name: string,
+      weight: number
     }
   }
 }
