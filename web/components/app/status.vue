@@ -19,6 +19,7 @@ const config = useRuntimeConfig();
 const isOnline = useApiOnline();
 
 function pollHealth() {
+  console.log(config.public)
   fetch(`${config.public.apiUrl}/health`)
     .then((response) => {
       isOnline.value = response.ok;
