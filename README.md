@@ -158,7 +158,7 @@ OK
 This doesn't involve the homework, since all the homework solutions are in the api. Web is used only for visualizing the data.
 
 * Web implementation uses Nuxt 3.10 and Vite 5
-* Notable libraries used are: [shadcn-vue](https://www.shadcn-vue.com), [FormKit](https://formkit.com) and my beloved (TailwindCSS)[https://tailwindcss.com]
+* Notable libraries used are: [shadcn-vue](https://www.shadcn-vue.com), [FormKit](https://formkit.com) and my beloved [TailwindCSS](https://tailwindcss.com)
 * Some remotely relevant places for the homework would be:
   * /web/pages/create/simulation.vue
   * /web/pages/simulation/[slug].vue
