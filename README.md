@@ -7,6 +7,7 @@
 * Name: Radoslav Kolev
 * Email: rkolev@proton.me
 * URL: https://nemetschek.rkolev.dev/
+* API URL: https://api.nemetscheck.rkolev.dev/ OR https://api-production-nemetschek-rkolev.up.railway.app/
 
 ## Project Structure
 The project consists of two "parts":
