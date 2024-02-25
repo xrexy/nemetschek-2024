@@ -29,6 +29,7 @@ export const simulationController = new Elysia({
         warehouses: data.warehouses,
         drones: data.drones,
         timeFactorMs: data.timeFactorMs,
+        customers: data.customers,
         slug,
       }))
     }

@@ -1,4 +1,4 @@
 export const useOnlineSimulations = () => {
-  const online = useState<MinimalSimulationData[]>('online-simulations', () => []);
+  const online = useState<MinimalSimulation[]>('online-simulations', () => []);
   return online;
 }

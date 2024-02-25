@@ -3,8 +3,9 @@ import { Schema, z } from 'zod'
 const schema = z.object({
   res: z.array(z.object({
     slug: z.string(),
-    analytics: z.any({}),
+    analytics: z.any(),
     warehouses: z.array(z.any({})),
+    customers: z.array(z.any({})),
     drones: z.array(z.any({})),
     timeFactorMs: z.number(),
   }))
@@ -31,6 +32,7 @@ export default defineNuxtRouteMiddleware(async () => {
       return;
     }
 
+    /* @ts-ignore not proper validation; types cannot be inferred correctly */
     online.value = await fetch(`${config.public.apiUrl}/simulation/online`)
   })
 })

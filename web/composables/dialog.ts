@@ -29,3 +29,4 @@ export const useDialog = <T>(prefix: string) => {
 
 export const useHistoryDialog = () => useDialog<{ history: History, slug: string }>('history')
 export const useDroneStatusDialog = () => useDialog<{ drones: Drone[], slug: string }>('drone-status')
+export const useAddOrderDialog =  () =>  useDialog<{ addOrder: (order: InputOrder) => void, products: ProductList, customers: Customer[], slug: string }>('add-order')

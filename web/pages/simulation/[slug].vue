@@ -41,7 +41,12 @@
         </div>
 
         <div>
-          <p class="font-semibold text-xl pb-2">Orders</p>
+          <div class="w-full flex items-center justify-between">
+            <p class="font-semibold text-xl pb-2">Orders</p>
+            <Button @click="openAddOrderDialog" variant="link">
+              Add Order
+            </Button>
+          </div>
           <div class="grid grid-cols-3 gap-2">
             <SimulationItem :key="id" v-for="{ customer, status, weight, id } in simulation.orders"
               :title="`Order #${id}`" :stats="[
@@ -73,6 +78,7 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -86,6 +92,7 @@ const route = useRoute();
 const _slug = route.params.slug;
 const slug = Array.isArray(_slug) ? _slug[0] : _slug;
 
+const addOrderDialog = useAddOrderDialog();
 const droneStatusDialog = useDroneStatusDialog();
 const historyDialog = useHistoryDialog();
 const ready = ref(false);
@@ -116,6 +123,31 @@ function openDroneStatusDialog() {
   });
 }
 
+function openAddOrderDialog() {
+  if (!simulation.value) return;
+
+  addOrderDialog.open({
+    addOrder: (order) => {
+      console.log(order);
+      if (socket.readyState !== WebSocket.OPEN) {
+        toast({
+          title: "Error",
+          description: "The simulation is not ready yet.",
+        });
+        return;
+      }
+
+      socket.send(JSON.stringify({
+        event: 'add-order',
+        payload: order,
+      }));
+    },
+    customers: simulation.value.customers,
+    products: simulation.value.products,
+    slug,
+  });
+}
+
 const lastHistoryIdx = ref(0);
 watch(() => simulation.value?.history, (history, oldHistory) => {
   if (!history || !oldHistory) return;
@@ -131,14 +163,6 @@ watch(() => simulation.value?.history, (history, oldHistory) => {
   })
 
   lastHistoryIdx.value = history.data.length;
-
-  // console.log(lastHistoryIdx.value)
-  // for (let i = lastHistoryIdx.value; i < history.data.length; i++) {
-  //   const entry = history[i];
-  //   console.log(entry)
-  // }
-
-  // lastHistoryIdx.value = history.data.length;
 })
 
 let socket: WebSocket;
@@ -146,15 +170,28 @@ onBeforeMount(() => {
   socket = new WebSocket(`ws://localhost:8080/ws/${slug}`);
 
   socket.onmessage = (event) => {
-    if (event.data.startsWith('No data found for slug')) {
-      ready.value = true;
-      return;
-    }
-
     try {
-      const data = JSON.parse(event.data) as Simulation;
-      simulation.value = data;
-      ready.value = true;
+      const data = JSON.parse(event.data);
+      if (data.slug) {
+        simulation.value = data;
+        ready.value = true;
+        return;
+      }
+
+      if (data.event === 'add-order') {
+        const ok = data.ok;
+        if (ok) {
+          toast({
+            title: "Order Added",
+            description: "The order has been added to the simulation.",
+          })
+        } else {
+          toast({
+            title: "Error",
+            description: data.message,
+          })
+        }
+      }
     } catch (e) {
       console.error("Couldn't parse data", e);
     }

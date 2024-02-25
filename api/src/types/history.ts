@@ -2,7 +2,7 @@ import type { Drone } from "./drone"
 import type { Order } from "./order"
 import type { Warehouse } from "./warehouse"
 
-export type HistoryEvents = 'created' | 'drone-created' | 'drone-battery-update' | 'drone-returned' | 'drone-sent' | 'order-fulfilled'
+export type HistoryEvents = 'created' | 'drone-created' | 'drone-battery-update' | 'drone-returned' | 'drone-sent' | 'order-fulfilled' | 'order-added'
 type MinimalOrder = { customerId: number } & Pick<Order, 'productList' | 'id'>
 
 export interface HistoryEventPayloads {
@@ -33,6 +33,10 @@ export interface HistoryEventPayloads {
   'order-fulfilled': {
     order: MinimalOrder,
     droneId: number
+  },
+
+  'order-added': {
+    order: MinimalOrder
   }
 }
 

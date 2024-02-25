@@ -2,6 +2,7 @@
   <div class="">
     <SimulationHistoryDialog />
     <SimulationDroneStatusDialog />
+    <SimulationAddOrderDialog />
     
     <Toaster />
     <AppHeader />

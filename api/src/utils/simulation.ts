@@ -3,11 +3,12 @@ import { distanceBetween } from "./distance";
 import { Drone, DroneStatus, DroneStatusData } from "../types/drone";
 import { HistoryEventPayloads, HistoryEvents, createHistoryEvent } from "../types/history";
 
-import { Order } from "../types/order";
+import { InputOrder, Order } from "../types/order";
 import { Position } from "../types/position";
 import { SimulationData } from "../types/simulation";
 import { Warehouse } from "../types/warehouse";
 import { memoryDbHistory, memoryDb } from "./db";
+import { Customer } from "../types/customer";
 
 export const WAREHOUSE_TIME_FOR_FULL_CHARGE = 20;
 export const RESUPPLY_DELAY = 20;
@@ -58,6 +59,24 @@ export function calculateSimulationTime(data: SimulationData) {
 
 export function calculateSimulationTickSpeed(data: SimulationData) {
   return data.deliveryStatus.frequency * data.timeFactorMs;
+}
+
+export function findCustomer(data: SimulationData, customerId: number): Customer {
+  return data.customers.find(c => c.id === customerId)!
+}
+
+export function parseInputOrder(data: SimulationData, o: InputOrder, id?: number): Order {
+  const customer = findCustomer(data, o.customerId);
+  if (!customer) throw new Error(`customer not found for id ${o.customerId}`)
+
+  return {
+    id: id || data.orders.length,
+    customer: findCustomer(data, o.customerId),
+    productList: o.productList,
+    status: 'pending',
+    statusData: { pending: {} },
+    weight: Object.values(o.productList).reduce((acc, curr) => acc + curr, 0)
+  }
 }
 
 export function simulationTick(data: SimulationData, time?: {
@@ -128,7 +147,7 @@ export function simulationTick(data: SimulationData, time?: {
           startedAt: drone.statusData.delivering!.startedAt,
           distance: drone.statusData.delivering!.distance
         }
-       }
+      }
 
       drone.status = 'returning';
       drone.statusData = {
@@ -142,8 +161,6 @@ export function simulationTick(data: SimulationData, time?: {
           order
         }
       };
-
-
 
       db.history.addEvent('order-fulfilled', {
         order: {

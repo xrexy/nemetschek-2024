@@ -94,6 +94,16 @@ function aggregateEvent(entry: HistoryEntry<HistoryEvents>): AggregatedData {
     }
   }
 
+  if (isHistoryEvent(entry, 'order-added')) {
+    const { order: { customerId, id, productList } } = entry.payload;
+    const normalizedProductList = Object.entries(productList).map(([product]) => product).join(', ');
+    return {
+      event: entry.event,
+      timestamp: entry.createdAt,
+      text: `Order #${id} added for Customer #${customerId} with products ${normalizedProductList}`
+    }
+  }
+
   throw new Error('Unknown event type');
 }
 
