@@ -22,6 +22,12 @@
 <script setup lang="ts">
 import Toaster from '@/components/ui/toast/Toaster.vue'
 
+const config = useRuntimeConfig();
+
 // force tailwind's dark mode
 useHead({ htmlAttrs: { class: "dark" } })
+
+onMounted(() => {
+  console.info('Public Config', config.public)
+})
 </script>
