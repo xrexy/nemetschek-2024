@@ -122,6 +122,7 @@ import { useAddCustomerDialog } from '~/composables/dialog';
 
 type Analytic = keyof Simulation['analytics'];
 
+const config = useRuntimeConfig();
 const { toast } = useToast();
 const route = useRoute();
 const _slug = route.params.slug;
@@ -158,7 +159,7 @@ watch(() => simulation.value?.history, (history, oldHistory) => {
 let socket: WebSocket;
 onUnmounted(() => socket.close());
 onBeforeMount(() => {
-  socket = new WebSocket(`ws://localhost:8080/ws/${slug}`);
+  socket = new WebSocket(`${config.public.wsUrl}/${slug}`);
 
   socket.onmessage = (event) => {
     try {

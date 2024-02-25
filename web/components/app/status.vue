@@ -15,10 +15,11 @@
 const POLLING_INTERVAL = 5000;
 const POLLING_ONLINE_MULTIPLIER = 3;
 
+const config = useRuntimeConfig();
 const isOnline = useApiOnline();
 
 function pollHealth() {
-  fetch('http://localhost:8080/api/v1/health')
+  fetch(`${config.public.apiUrl}/health`)
     .then((response) => {
       isOnline.value = response.ok;
     })

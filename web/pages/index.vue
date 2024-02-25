@@ -7,9 +7,8 @@
     </p>
 
     <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-      <SimulationCard v-for="simulation in online" :key="simulation" :simulation="simulation" />
+      <SimulationCard v-for="(simulation, k) in online" :key="k" :simulation="simulation" />
     </div>
-
   </div>
 </template>
 
