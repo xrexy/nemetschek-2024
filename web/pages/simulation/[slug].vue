@@ -14,21 +14,29 @@
         <div>
           <p class="font-semibold text-xl pb-2">Warehouses</p>
           <div class="grid grid-cols-2 gap-2">
-            <SimulationWarehouse v-for="warehouse in simulation.warehouses" :warehouse="warehouse" :key="warehouse.id" />
+            <SimulationItem v-for="{ droneIds, position, name } in simulation.warehouses" :title="name" :stats="[
+              { label: 'Drones Stored', icon: 'eos-icons:drone', value: droneIds.length },
+              { label: 'Location', icon: 'material-symbols:pin-drop-outline', value: `X: ${position.x}; Y: ${position.y}` }
+            ]" />
           </div>
         </div>
 
         <div>
           <p class="font-semibold text-xl pb-2">Drones</p>
           <div class="grid grid-cols-3 gap-2">
-            <SimulationDrone v-for="drone in simulation.drones" :drone="drone" :key="drone.id" />
+            <SimulationDrone v-for=" drone  in  simulation.drones " :drone="drone" :key="drone.id" />
           </div>
         </div>
 
         <div>
           <p class="font-semibold text-xl pb-2">Orders</p>
           <div class="grid grid-cols-3 gap-2">
-            <SimulationOrder v-for="order in simulation.orders" :order="order" :key="order.id" />
+            <SimulationItem v-for="{ customer, status, weight, id } in simulation.orders" :title="`Order #${id}`" :stats="[
+              { label: 'Customer', icon: 'material-symbols-light:deployed-code-account-outline', value: customer.name },
+              { label: 'Location', icon: 'material-symbols:pin-drop-outline', value: `X: ${customer.coordinates.x}; Y: ${customer.coordinates.y}` },
+              { label: 'Weight', icon: 'material-symbols:weight-outline', value: `${format(weight)} kg` },
+              { label: 'Status', icon: 'ph:pulse', value: status },
+            ]" />
           </div>
         </div>
 
@@ -40,7 +48,7 @@
 
         <div v-if="!analytics" class="">Something went wrong.</div>
         <div class="flex flex-col gap-1.5" v-else>
-          <div v-for="{ icon, title, value } in analytics"
+          <div v-for=" { icon, title, value }  in  analytics "
             class="w-full group flex items-center justify-between text-sm font-mono">
             <div class="flex items-center gap-1">
               <Icon :name="icon" size="1.25rem" />
@@ -68,6 +76,11 @@ const ready = ref(false);
 const simulation = shallowRef<Simulation | null>(null);
 
 const analytics = useAnalytics();
+
+const numberFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
+function format(value: number) {
+  return numberFormatter.format(value)
+}
 
 let socket: WebSocket;
 onBeforeMount(() => {
