@@ -5,6 +5,10 @@ export const useDialog = <T>(prefix: string) => {
 
   const data = useState<T | null>(`${prefix}-dialog-data`, () => null);
 
+  watch(isOpen, (open) => {
+    if(!open) data.value = null;
+  })
+
   const open = (d: T) => {
     isOpen.value = true;
     data.value = d;
