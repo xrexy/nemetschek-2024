@@ -10,7 +10,7 @@ export const Warehouse = t.Object({
   droneIds: t.Array(t.Number({ minimum: 0 })),
 })
 
-export const InputWarehouse = t.Intersect([Position, t.Object({ name: t.String({ minLength: 3 }) })])
+export const InputWarehouse = t.Intersect([Position, t.Object({ name: t.String({ minLength: 1 }) })])
 
 export type InputWarehouse = Static<typeof InputWarehouse>
 export type Warehouse = Static<typeof Warehouse>

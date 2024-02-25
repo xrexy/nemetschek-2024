@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { Schema, z } from 'zod'
 
 const schema = z.object({
   res: z.array(z.object({
@@ -10,15 +10,27 @@ const schema = z.object({
   }))
 })
 
+async function fetch(url: string) {
+  try {
+    const req = await $fetch(url)
+    return schema.parse(req).res
+  } catch (e) {
+    console.error(e)
+    return []
+  }
+}
+
 export default defineNuxtRouteMiddleware(async () => {
   const online = useOnlineSimulations()
   const config = useRuntimeConfig()
+  const isApiOnline = useApiOnline()
 
-  const res = await $fetch(`${config.public.apiUrl}/simulation/online`)
-  console.log(res);
+  watchEffect(async () => {
+    if (!isApiOnline.value) {
+      online.value = []
+      return;
+    }
 
-  const parsed = schema.parse(res);
-
-  /* @ts-ignore schema is very invalid at the moment - don't have enough time at the moment */
-  online.value = parsed.res
+    online.value = await fetch(`${config.public.apiUrl}/simulation/online`)
+  })
 })

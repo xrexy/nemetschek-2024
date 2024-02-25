@@ -24,8 +24,10 @@ export type Order = {
   statusData?: OrderStatusData;
 }
 
+export const droneBatteryTypes = ["normal", "fast-charged"] as const;
+export type DroneBatteryType = typeof droneBatteryTypes[number];
 export type DroneBattery = {
-  type: "normal" | "fast-charged";
+  type: DroneBatteryType;
   capacity: number;
   consumption: number;
   currentCharge: number;
@@ -160,6 +162,38 @@ export type Simulation = {
     averageDistancePerOrder: number;
     averageDistancePerDrone: number;
   };
+}
+
+export type ProductList = Record<string, number>
+
+export type SimulationInput = {
+  deliveryStatus: Simulation['deliveryStatus']
+  output: {
+    poweredOn: boolean,
+    minutes: {
+      program: number,
+      real: number
+    }
+  },
+  'map-top-right-coordinate': Position,
+  products: ProductList,
+  warehouses: (Position & { name: string })[]
+  customers: {
+    coordinates: Position,
+    id: string,
+    name: string;
+  }[],
+  orders: {
+    customerId: string,
+    productList: ProductList
+  }[],
+  typesOfDrones: {
+    capacity: string,
+    consumption: string,
+    type: DroneBatteryType
+  }[],
+
+  chargingStations: (Position & { type: ChargingStationType })[],
 }
 
 export type MinimalSimulation = Pick<Simulation, 'analytics' | 'drones' | 'slug' | 'timeFactorMs' | 'warehouses'>

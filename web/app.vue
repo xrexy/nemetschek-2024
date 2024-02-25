@@ -1,5 +1,6 @@
 <template>
   <div class="">
+    <Toaster />
     <AppHeader />
 
     <div class="pt-16 w-full h-[calc(100svh-var(--header-height))]">
@@ -12,6 +13,8 @@
 </template>
 
 <script setup lang="ts">
+import Toaster from '@/components/ui/toast/Toaster.vue'
+
 // force tailwind's dark mode
 useHead({ htmlAttrs: { class: "dark" } })
 </script>
