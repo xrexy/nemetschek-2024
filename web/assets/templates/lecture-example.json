@@ -141,21 +141,5 @@
       "type": "normal"
     }
   ],
-  "chargingStations": [
-    {
-      "x": 110,
-      "y": 180,
-      "type": "cheapest"
-    },
-    {
-      "x": 10,
-      "y": 190,
-      "type": "normal"
-    },
-    {
-      "x": 200,
-      "y": 120,
-      "type": "fast"
-    }
-  ]
+  "chargingStations": []
 }

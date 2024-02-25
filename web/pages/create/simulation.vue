@@ -1,7 +1,24 @@
 <template>
   <div class="flex flex-col items-center justify-start gap-4">
     <h1 class="font-mono font-black text-3xl">Create Simulation</h1>
-    <FormKit type="form" :actions="false"
+
+    <h2 class="font-mono font-semibold text-xl">Use a template</h2>
+
+    <div class="w-[50%] grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+      <button :disabled="creating" class="disabled:opacity-75" @click="fromTemplate(slug)"
+        v-for="{ initialOrders, customers, products, slug, warehouses } in simulationTemplates" :key="capitalize(slug)">
+        <SimulationItem :title="capitalizeViaSeparator(slug, '-')" :stats="[
+          { label: 'Initial Orders', icon: 'tabler:package', value: initialOrders },
+          { label: 'Customers', icon: 'material-symbols-light:deployed-code-account-outline', value: customers },
+          { label: 'Products', icon: 'streamline:money-cashier-tag-codes-tags-tag-product-label', value: products },
+          { label: 'Warehouses', icon: 'lucide:warehouse', value: warehouses },
+        ]" />
+      </button>
+    </div>
+
+    <h2 class="font-mono font-semibold text-xl">Create from scratch</h2>
+
+    <FormKit type="form" :disabled="creating" :actions="false"
       form-class="w-[75%] sm:max-w-[25rem] flex flex-col items-center justify-center pb-8" @submit="onSubmit">
 
       <h2 class="font-mono font-semibold text-lg w-full">Simulation Variables</h2>
@@ -85,7 +102,7 @@
       </FormInputWithCounter>
 
       <div class="flex items-center gap-2 w-full">
-        <Button class="w-full my-2" type="submit">
+        <Button :disabled="creating" class="w-full my-2" type="submit">
           Create
         </Button>
       </div>
@@ -99,12 +116,27 @@ import { useToast } from '~/components/ui/toast';
 const config = useRuntimeConfig()
 const { toast } = useToast()
 
+const creating = ref(false);
 const minutes = ref<{ program: number; real: number }>();
 
 const timeFactor = computed(() => {
   if (!minutes.value?.program || !minutes.value?.real) return null;
   return (1 / minutes.value.program) * minutes.value.real
 })
+
+async function fromTemplate(slug: string) {
+  try {
+    creating.value = true;
+    const data = await import(`../../assets/templates/${slug}.json`);
+    
+    const res = await create(data.default);
+    if (res?.slug) {
+      await navigateTo(`/simulation/${res.slug}`)
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
 
 async function onSubmit(input: any) {
   function parseGroupName(allKeys: string[], groupName: string) {
@@ -165,6 +197,16 @@ async function onSubmit(input: any) {
     ]
   }
 
+  console.log(data);
+  const res = await create(data);
+  if (res?.slug) {
+    await navigateTo(`/simulation/${res.slug}`)
+  }
+}
+
+async function create(data: SimulationInput) {
+  creating.value = true;
+
   const { dismiss: dismissCreationToast } = toast({
     title: 'We are creating your simulation...',
     description: 'Please wait a moment, we will redirect you once it is done.',
@@ -182,12 +224,13 @@ async function onSubmit(input: any) {
     dismissCreationToast()
     toast({ title: 'Simulation created!' });
 
-    await navigateTo(`/simulation/${slug}`)
+    return { slug }
   } catch (e) {
     dismissCreationToast()
     toast({ title: 'Failed to create simulation', description: 'Please check if all your inputs are correct, or try again later.' });
     console.error(e)
+  } finally {
+    creating.value = false;
   }
-  console.log(data);
 }
 </script>

@@ -1,0 +1,84 @@
+{
+  "deliveryStatus": {
+    "output": true,
+    "frequency": 40
+  },
+  "products": {
+    "tomatoes": 40,
+    "cucumber": 120,
+    "milk": 1000,
+    "ham": 200,
+    "eggs": 20,
+    "bananas": 130,
+    "carrots": 80,
+    "bread": 650
+  },
+  "output": {
+    "poweredOn": true,
+    "minutes": {
+      "program": 10,
+      "real": 600
+    }
+  },
+  "map-top-right-coordinate": {
+    "x": 280,
+    "y": 280
+  },
+  "warehouses": [
+    {
+      "x": 100,
+      "y": 100,
+      "name": "Left warehouse"
+    },
+    {
+      "x": 200,
+      "y": 200,
+      "name": "Right warehouse"
+    }
+  ],
+  "customers": [
+    {
+      "id": 1,
+      "name": "John Stocks",
+      "coordinates": {
+        "x": 10,
+        "y": 10
+      }
+    },
+    {
+      "id": 2,
+      "name": "Alfred Derrick",
+      "coordinates": {
+        "x": 213,
+        "y": 187
+      }
+    },
+    {
+      "id": 3,
+      "name": "Richard Brune",
+      "coordinates": {
+        "x": 108,
+        "y": 15
+      }
+    }
+  ],
+  "orders": [],
+  "typesOfDrones": [
+    {
+      "capacity": "500W",
+      "consumption": "1W",
+      "type": "normal"
+    },
+    {
+      "capacity": "1kW",
+      "consumption": "3W",
+      "type": "fast-charged"
+    },
+    {
+      "capacity": "2kW",
+      "consumption": "5W",
+      "type": "normal"
+    }
+  ],
+  "chargingStations": []
+}
