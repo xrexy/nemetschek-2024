@@ -9,7 +9,7 @@
     </div>
 
     <div class="w-full group flex items-center justify-between text-sm font-mono"
-      v-for="{ icon, title, value } in droneData">
+      v-for="{ icon, title, value } in droneData" :key="drone.id">
       <div class="flex items-center gap-1">
         <Icon :name="icon" size="1rem" />
         <p>{{ title }}</p>

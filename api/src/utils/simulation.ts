@@ -37,7 +37,7 @@ export function createDrone(o: {
   memoryDbHistory(data).addEvent('drone-created', { droneId: id })
 
   const drone = {
-    battery,
+    battery: { ...battery },
     id,
     ...droneData
   }
@@ -66,6 +66,7 @@ export function simulationTick(data: SimulationData, time?: {
   programDiff: number,
 }): SimulationData {
   const { now, programDiff } = time ?? calculateSimulationTime(data);
+  console.debug(`[${data.slug}] Simulation tick: ${now}; ${programDiff}`)
 
   const db = memoryDb(data);
 
@@ -191,11 +192,7 @@ export function simulationTick(data: SimulationData, time?: {
     }
 
     // if there are drones, check if any of them are available
-    const dronesInWarehouse = warehouse.droneIds.map(id => {
-      const drone = db.drone.getWithId(id)
-      db.drone.updateBatteryCharge(db, drone, programDiff);
-      return drone;
-    });
+    const dronesInWarehouse = warehouse.droneIds.map((id) => db.drone.getWithId(id));
 
     const availableDrone = dronesInWarehouse.find(drone => drone.status === 'idle' && drone.battery.currentCharge > distance * 2);
 
