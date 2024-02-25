@@ -8,7 +8,6 @@ const envSchema = z.object({
 })
 
 const _env = import.meta.env || process.env || {}
-console.log('env', _env.LOG_LEVEL)
 export const env = envSchema.parse(_env)
 
 const args = {

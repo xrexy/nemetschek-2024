@@ -114,7 +114,6 @@ export const memoryDbDrone = (data: SimulationData) => ({
 
       const consumptionPerDistance = drone.battery.consumption;
       const weight = order?.weight ?? 0;
-      console.log('weight', weight, order?.productList)
       const distanceBatteryConsumption = distanceCovered / distance * consumptionPerDistance;
       const weightBatteryConsumption = weight;
 

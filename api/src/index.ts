@@ -12,6 +12,6 @@ const app = new Elysia()
   .use(cors())
   .listen(config.env.PORT);
 
-console.log(
+console.info(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
 );

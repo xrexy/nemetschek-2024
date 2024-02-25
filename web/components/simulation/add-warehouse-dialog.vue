@@ -38,7 +38,6 @@ const { data, isOpen, close } = useAddWarehouseDialog();
 const adding = ref(false);
 async function onSubmit(e: any) {
   if (adding.value) return;
-  console.log(e);
   if (!data.value) {
     console.error('No data');
     return;

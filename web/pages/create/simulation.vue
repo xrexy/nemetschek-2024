@@ -197,7 +197,6 @@ async function onSubmit(input: any) {
     ]
   }
 
-  console.log(data);
   const res = await create(data);
   if (res?.slug) {
     await navigateTo(`/simulation/${res.slug}`)
