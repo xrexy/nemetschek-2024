@@ -2,10 +2,10 @@
   <div class="flex flex-col items-center justify-start gap-4">
     <div class="flex items-center gap-2">
       <h1 class="font-mono font-black text-3xl">{{ slug }}</h1>
-      <Button :disabled="!simulation"  @click="openHistoryDialog" variant="ghost" size="icon" title="History">
+      <Button :disabled="!simulation" @click="openHistoryDialog" variant="ghost" size="icon" title="History">
         <Icon name="solar:history-bold" size="1.3rem" />
       </Button>
-      <Button :disabled="!simulation"  @click="openDroneStatusDialog" variant="ghost" size="icon" title="Drone Statuses">
+      <Button :disabled="!simulation" @click="openDroneStatusDialog" variant="ghost" size="icon" title="Drone Statuses">
         <Icon name="carbon:drone-front" size="1.3rem" />
       </Button>
     </div>
@@ -22,29 +22,34 @@
         <div>
           <p class="font-semibold text-xl pb-2">Warehouses</p>
           <div class="grid grid-cols-2 gap-2">
-            <SimulationItem v-for="{ droneIds, position, name } in simulation.warehouses" :title="name" :stats="[
-              { label: 'Drones Stored', icon: 'eos-icons:drone', value: droneIds.length },
-              { label: 'Location', icon: 'material-symbols:pin-drop-outline', value: `X: ${position.x}; Y: ${position.y}` }
-            ]" />
+            <SimulationItem :key="name" v-for="{ droneIds, position, name } in simulation.warehouses" :title="name"
+              :stats="[
+                { label: 'Drones Stored', icon: 'eos-icons:drone', value: droneIds.length },
+                { label: 'Location', icon: 'material-symbols:pin-drop-outline', value: `X: ${position.x}; Y: ${position.y}` }
+              ]" />
           </div>
         </div>
 
         <div>
           <p class="font-semibold text-xl pb-2">Drones</p>
           <div class="grid grid-cols-3 gap-2">
-            <SimulationDrone v-for=" drone  in  simulation.drones " :drone="drone" :key="drone.id" />
+            <SimulationItem :key="id" v-for="{ battery, id, status } in simulation.drones" :title="`Drone #${id}`" :stats="[
+              { label: 'Status', icon: 'ph:pulse', value: status },
+              { label: 'Battery', icon: 'material-symbols:battery-horiz-000-rounded', value: `${format(battery.currentCharge)}/${format(battery.capacity)}` },
+            ]" />
           </div>
         </div>
 
         <div>
           <p class="font-semibold text-xl pb-2">Orders</p>
           <div class="grid grid-cols-3 gap-2">
-            <SimulationItem v-for="{ customer, status, weight, id } in simulation.orders" :title="`Order #${id}`" :stats="[
-              { label: 'Customer', icon: 'material-symbols-light:deployed-code-account-outline', value: customer.name },
-              { label: 'Location', icon: 'material-symbols:pin-drop-outline', value: `X: ${customer.coordinates.x}; Y: ${customer.coordinates.y}` },
-              { label: 'Weight', icon: 'material-symbols:weight-outline', value: `${format(weight)} kg` },
-              { label: 'Status', icon: 'ph:pulse', value: status },
-            ]" />
+            <SimulationItem :key="id" v-for="{ customer, status, weight, id } in simulation.orders"
+              :title="`Order #${id}`" :stats="[
+                { label: 'Customer', icon: 'material-symbols-light:deployed-code-account-outline', value: customer.name },
+                { label: 'Location', icon: 'material-symbols:pin-drop-outline', value: `X: ${customer.coordinates.x}; Y: ${customer.coordinates.y}` },
+                { label: 'Weight', icon: 'material-symbols:weight-outline', value: `${format(weight)} kg` },
+                { label: 'Status', icon: 'ph:pulse', value: status },
+              ]" />
           </div>
         </div>
 
@@ -94,7 +99,7 @@ function format(value: number) {
 }
 
 function openHistoryDialog() {
-  if(!simulation.value?.history) return;
+  if (!simulation.value?.history) return;
 
   historyDialog.open({
     slug,
@@ -103,7 +108,7 @@ function openHistoryDialog() {
 }
 
 function openDroneStatusDialog() {
-  if(!simulation.value?.drones) return;
+  if (!simulation.value?.drones) return;
 
   droneStatusDialog.open({
     slug,
