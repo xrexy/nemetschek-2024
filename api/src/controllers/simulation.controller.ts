@@ -54,13 +54,16 @@ export const simulationController = new Elysia({
       const capacity = parse(d.capacity);
       return { capacity, currentCharge: capacity, consumption: parse(d.consumption), type: d.type }
     }
+    const now = Date.now();
 
     const data: SimulationData = {
       slug,
       drones: [],
       history: {
-        data: [],
-        _meta: { lastFetched: Date.now() }
+        data: [
+          { event: 'created', payload: {}, createdAt: now }
+        ],
+        _meta: { lastFetched: now }
       },
 
       analytics: {
@@ -120,7 +123,7 @@ export const simulationController = new Elysia({
       if (missedTicks === 1) {
         console.debug(`[${data.slug}] Simulation tick: ${now}; ${programDiff}`)
       }
-      
+
       data = simulationTick(data, { now, diff, programDiff });
       data.history._meta.lastFetched = now;
 
