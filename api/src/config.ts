@@ -1,3 +1,4 @@
+import { p } from 'elysia/dist/index-59i0HOI0';
 import { z } from 'zod';
 
 const envSchema = z.object({
@@ -6,7 +7,9 @@ const envSchema = z.object({
   PORT: z.string().default('8080'),
 })
 
-export const env = envSchema.parse(import.meta.env)
+const _env = import.meta.env || process.env || {}
+console.log('env', _env.LOG_LEVEL)
+export const env = envSchema.parse(_env)
 
 const args = {
   // watch: process.argv.includes("--watch"),
