@@ -170,3 +170,4 @@ This doesn't involve the homework, since all the homework solutions are in the a
 * Here are some stuff I didn't get to implement(or are partially implemented in my opinion):
   * Charging Stations
   * There were sometimes "tick misses"(when tick speed goes out of sync) and I'm pretty sure they are fixed, didn't have enough time to test. From my testing, it happens sometimes but it's milliseconds and corrects itself in the next tick.
+* As I mentioned I had very little time, so most routes/events don't have proper validation
