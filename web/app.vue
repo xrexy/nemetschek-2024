@@ -3,6 +3,8 @@
     <SimulationHistoryDialog />
     <SimulationDroneStatusDialog />
     <SimulationAddOrderDialog />
+    <SimulationAddCustomerDialog />
+    <SimulationAddWarehouseDialog />
     
     <Toaster />
     <AppHeader />

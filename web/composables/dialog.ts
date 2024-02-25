@@ -6,7 +6,7 @@ export const useDialog = <T>(prefix: string) => {
   const data = useState<T | null>(`${prefix}-dialog-data`, () => null);
 
   watch(isOpen, (open) => {
-    if(!open) data.value = null;
+    if (!open) data.value = null;
   })
 
   const open = (d: T) => {
@@ -29,4 +29,6 @@ export const useDialog = <T>(prefix: string) => {
 
 export const useHistoryDialog = () => useDialog<{ history: History, slug: string }>('history')
 export const useDroneStatusDialog = () => useDialog<{ drones: Drone[], slug: string }>('drone-status')
-export const useAddOrderDialog =  () =>  useDialog<{ addOrder: (order: InputOrder) => void, products: ProductList, customers: Customer[], slug: string }>('add-order')
+export const useAddOrderDialog = () => useDialog<{ add: (order: InputOrder) => void, products: ProductList, customers: Customer[], slug: string }>('add-order')
+export const useAddWarehouseDialog = () => useDialog<{ add: (warehouse: Position & { name: string }) => void, slug: string }>('add-warehouse')
+export const useAddCustomerDialog = () => useDialog<{ add: (customer: Customer) => void, customers: Customer[], slug: string }>('add-customer')

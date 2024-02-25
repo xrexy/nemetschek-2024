@@ -45,7 +45,7 @@ async function onSubmit(e: any) {
 
 
   const productKeys = Object.entries(e).filter(([name]) => name.startsWith('product-'));
-  data.value.addOrder({
+  data.value.add({
     customerId: e.customerId,
     productList: productKeys.reduce((acc, curr: any) => ({
       ...acc,

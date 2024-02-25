@@ -2,7 +2,11 @@ import { Elysia, t } from "elysia";
 import { ctx } from "../context";
 import { calculateSimulationTickSpeed, parseInputOrder } from "../utils/simulation";
 import { InputOrder } from "../types/order";
-import { memoryDbHistory } from "../utils/db";
+import { memoryDb, memoryDbHistory, memoryDbWarehouse } from "../utils/db";
+import { Position } from "../types/position";
+import { assetNever } from "../types/utility";
+import { InputWarehouse } from "../types/warehouse";
+import { Customer } from "../types/customer";
 
 export const ws = new Elysia({
   prefix: "/ws",
@@ -33,24 +37,25 @@ export const ws = new Elysia({
       store.intervalStorage[slug] = setInterval(() => ws.send(getData(slug)), calculateSimulationTickSpeed(data))
     },
     message(ws, message) {
-      if (message.event === 'add-order') {
-        const { payload } = message;
-        const slug = ws.data.params.slug;
-        const data = ws.data.store.data[slug]
-        if (!data) {
-          ws.send({ ok: false, message: `No data found for slug ${slug}`, event: message.event });
-          // ws.close();
-          return;
-        }
+      const slug = ws.data.params.slug;
+      const data = ws.data.store.data[slug]
+      if (!data) {
+        ws.send({ ok: false, message: `No data found for slug ${slug}`, event: message.event });
+        // ws.close();
+        return;
+      }
 
+      const db = memoryDb(data);
+      if (message.event === 'add-order') {
         try {
-          const historyDb = memoryDbHistory(data);
+          const { payload } = message;
+
           let order = parseInputOrder(data, payload);
           data.orders.push(order);
 
           ws.data.store.data[slug] = data;
 
-          historyDb.addEvent('order-added', {
+          db.history.addEvent('order-added', {
             order: {
               customerId: order.customer.id,
               id: order.id,
@@ -63,10 +68,54 @@ export const ws = new Elysia({
           console.error(e)
           ws.send({ ok: false, message: "Invalid customer id", event: message.event });
         }
+
+        return;
       }
+
+      if (message.event === 'add-warehouse') {
+        const { payload } = message;
+        const addedWarehouse = db.warehouse.add(payload)
+
+        db.history.addEvent("warehouse-added", {
+          warehouse: {
+            id: addedWarehouse.id,
+            position: addedWarehouse.position
+          }
+        })
+
+        ws.send({ ok: true, message: "Warehouse added", event: message.event });
+        return;
+      }
+
+      if (message.event === 'add-customer') {
+        const { payload } = message;
+
+        db.customer.add(payload)
+        db.history.addEvent('customer-added', {
+          customer: {
+            name: payload.name,
+            id: payload.id
+          }
+        })
+
+        ws.send({ ok: true, message: "Customer added", event: message.event });
+        return;
+      }
+
+      assetNever(message)
     },
-    body: t.Object({
-      event: t.Literal('add-order'),
-      payload: InputOrder
-    })
+    body: t.Union([
+      t.Object({
+        event: t.Literal('add-order'),
+        payload: InputOrder
+      }),
+      t.Object({
+        event: t.Literal('add-warehouse'),
+        payload: InputWarehouse
+      }),
+      t.Object({
+        event: t.Literal('add-customer'),
+        payload: Customer,
+      })
+    ])
   })

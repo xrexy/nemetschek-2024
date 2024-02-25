@@ -2,10 +2,11 @@
   <div class="flex flex-col items-center justify-start gap-4">
     <div class="flex items-center gap-2">
       <h1 class="font-mono font-black text-3xl">{{ slug }}</h1>
-      <Button :disabled="!simulation" @click="openHistoryDialog" variant="ghost" size="icon" title="History">
+      <Button :disabled="!simulation" @click="dialogs.open('history')" variant="ghost" size="icon" title="History">
         <Icon name="solar:history-bold" size="1.3rem" />
       </Button>
-      <Button :disabled="!simulation" @click="openDroneStatusDialog" variant="ghost" size="icon" title="Drone Statuses">
+      <Button :disabled="!simulation" @click="dialogs.open('droneStatus')" variant="ghost" size="icon"
+        title="Drone Statuses">
         <Icon name="carbon:drone-front" size="1.3rem" />
       </Button>
     </div>
@@ -16,12 +17,17 @@
     <p class="opacity-50" v-else-if="!simulation">
       We couldn't find a simulation with that slug.
     </p>
-    <div v-else class="w-[65%] min-h-fit flex gap-4">
+    <div v-else class="w-[65%] min-h-fit flex flex-col lg:flex-row gap-4">
       <div
         class="max-h-[40rem] overflow-auto flex-1 p-5 flex flex-col gap-4 rounded-md bg-gradient-to-t from-emerald-700/5 to-gray-800/25 transition duration-150 border-2 border-emerald-500/20 hover:border-emerald-500/30">
         <div>
-          <p class="font-semibold text-xl pb-2">Warehouses</p>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="w-full flex items-center justify-between">
+            <p class="font-semibold text-xl pb-2">Warehouses</p>
+            <Button @click="dialogs.open('addWarehouse')" variant="link">
+              Add Warehouse
+            </Button>
+          </div>
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-2">
             <SimulationItem :key="name" v-for="{ droneIds, position, name } in simulation.warehouses" :title="name"
               :stats="[
                 { label: 'Drones Stored', icon: 'eos-icons:drone', value: droneIds.length },
@@ -32,7 +38,7 @@
 
         <div>
           <p class="font-semibold text-xl pb-2">Drones</p>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-2">
             <SimulationItem :key="id" v-for="{ battery, id, status } in simulation.drones" :title="`Drone #${id}`" :stats="[
               { label: 'Status', icon: 'ph:pulse', value: status },
               { label: 'Battery', icon: 'material-symbols:battery-horiz-000-rounded', value: `${format(battery.currentCharge)}/${format(battery.capacity)}` },
@@ -43,11 +49,11 @@
         <div>
           <div class="w-full flex items-center justify-between">
             <p class="font-semibold text-xl pb-2">Orders</p>
-            <Button @click="openAddOrderDialog" variant="link">
+            <Button @click="dialogs.open('addOrder')" variant="link">
               Add Order
             </Button>
           </div>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-2">
             <SimulationItem :key="id" v-for="{ customer, status, weight, id } in simulation.orders"
               :title="`Order #${id}`" :stats="[
                 { label: 'Customer', icon: 'material-symbols-light:deployed-code-account-outline', value: customer.name },
@@ -58,10 +64,25 @@
           </div>
         </div>
 
+        <div>
+          <div class="w-full flex items-center justify-between">
+            <p class="font-semibold text-xl pb-2">Customers</p>
+            <Button @click="dialogs.open('addCustomer')" variant="link">
+              Add Customer
+            </Button>
+          </div>
+          <div class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-2">
+            <SimulationItem :key="name" v-for="{ name, coordinates } in simulation.customers"
+              :title="name" :stats="[
+                { label: 'Location', icon: 'material-symbols:pin-drop-outline', value: `X: ${coordinates.x}; Y: ${coordinates.y}` },
+              ]" />
+          </div>
+        </div>
+
       </div>
 
       <div
-        class="w-[25%] min-w-[22rem] p-5 rounded-md bg-gradient-to-t from-emerald-700/5 to-gray-800/25 transition duration-150 border-2 border-emerald-500/20 hover:border-emerald-500/30">
+        class="lg:w-[25%] min-w-[22rem] p-5 rounded-md bg-gradient-to-t from-emerald-700/5 to-gray-800/25 transition duration-150 border-2 border-emerald-500/20 hover:border-emerald-500/30">
         <p class="font-semibold text-xl pb-2">Analytics</p>
 
         <div v-if="!analytics" class="">Something went wrong.</div>
@@ -78,12 +99,12 @@
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
 <script setup lang="ts">
 import { useToast } from '~/components/ui/toast';
+import { useAddCustomerDialog } from '~/composables/dialog';
 
 type Analytic = keyof Simulation['analytics'];
 
@@ -92,60 +113,15 @@ const route = useRoute();
 const _slug = route.params.slug;
 const slug = Array.isArray(_slug) ? _slug[0] : _slug;
 
-const addOrderDialog = useAddOrderDialog();
-const droneStatusDialog = useDroneStatusDialog();
-const historyDialog = useHistoryDialog();
 const ready = ref(false);
 const simulation = shallowRef<Simulation | null>(null);
 
+const dialogs = useDialogs();
 const analytics = useAnalytics();
 
 const numberFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
 function format(value: number) {
   return numberFormatter.format(value)
-}
-
-function openHistoryDialog() {
-  if (!simulation.value?.history) return;
-
-  historyDialog.open({
-    slug,
-    history: simulation.value.history,
-  });
-}
-
-function openDroneStatusDialog() {
-  if (!simulation.value?.drones) return;
-
-  droneStatusDialog.open({
-    slug,
-    drones: simulation.value.drones,
-  });
-}
-
-function openAddOrderDialog() {
-  if (!simulation.value) return;
-
-  addOrderDialog.open({
-    addOrder: (order) => {
-      console.log(order);
-      if (socket.readyState !== WebSocket.OPEN) {
-        toast({
-          title: "Error",
-          description: "The simulation is not ready yet.",
-        });
-        return;
-      }
-
-      socket.send(JSON.stringify({
-        event: 'add-order',
-        payload: order,
-      }));
-    },
-    customers: simulation.value.customers,
-    products: simulation.value.products,
-    slug,
-  });
 }
 
 const lastHistoryIdx = ref(0);
@@ -166,6 +142,7 @@ watch(() => simulation.value?.history, (history, oldHistory) => {
 })
 
 let socket: WebSocket;
+onUnmounted(() => socket.close());
 onBeforeMount(() => {
   socket = new WebSocket(`ws://localhost:8080/ws/${slug}`);
 
@@ -178,19 +155,33 @@ onBeforeMount(() => {
         return;
       }
 
+      if (data.ok === false) {
+        toast({
+          title: "Error",
+          description: data.message,
+        })
+        return;
+      }
+
       if (data.event === 'add-order') {
-        const ok = data.ok;
-        if (ok) {
-          toast({
-            title: "Order Added",
-            description: "The order has been added to the simulation.",
-          })
-        } else {
-          toast({
-            title: "Error",
-            description: data.message,
-          })
-        }
+        toast({
+          title: "Order Added",
+          description: "The order has been added to the simulation.",
+        })
+      }
+
+      if (data.event === 'add-warehouse') {
+        toast({
+          title: "Warehouse Added",
+          description: "The warehouse has been added to the simulation.",
+        })
+      }
+
+      if (data.event === 'add-customer') {
+        toast({
+          title: "Customer Added",
+          description: "The customer has been added to the simulation.",
+        })
       }
     } catch (e) {
       console.error("Couldn't parse data", e);
@@ -198,9 +189,129 @@ onBeforeMount(() => {
   };
 })
 
-onUnmounted(() => {
-  socket.close();
-});
+/** I know, could be lot cleaner with generics and better use of functions, but I have no time at the moment. */
+function useDialogs() {
+  const addOrderDialog = useAddOrderDialog();
+  const addWarehouseDialog = useAddWarehouseDialog();
+  const addCustomerDialog = useAddCustomerDialog();
+
+  const droneStatusDialog = useDroneStatusDialog();
+  const historyDialog = useHistoryDialog();
+
+  function openAddOrderDialog() {
+    if (!simulation.value) return;
+
+    addOrderDialog.open({
+      add: (order) => {
+        if (socket.readyState !== WebSocket.OPEN) {
+          toast({
+            title: "Error",
+            description: "The simulation is not ready yet.",
+          });
+          return;
+        }
+
+        socket.send(JSON.stringify({
+          event: 'add-order',
+          payload: order,
+        }));
+      },
+      customers: simulation.value.customers,
+      products: simulation.value.products,
+      slug,
+    });
+  }
+
+  function openAddWarehouseDialog() {
+    if (!simulation.value) return;
+
+    addWarehouseDialog.open({
+      add: (warehouse) => {
+        if (socket.readyState !== WebSocket.OPEN) {
+          toast({
+            title: "Error",
+            description: "The simulation is not ready yet.",
+          });
+          return;
+        }
+
+        socket.send(JSON.stringify({
+          event: 'add-warehouse',
+          payload: warehouse,
+        }));
+      },
+      slug,
+    });
+  }
+
+  function openAddCustomerDialog() {
+    if (!simulation.value) return;
+
+    addCustomerDialog.open({
+      add: (customer) => {
+        if (socket.readyState !== WebSocket.OPEN) {
+          toast({
+            title: "Error",
+            description: "The simulation is not ready yet.",
+          });
+          return;
+        }
+
+        socket.send(JSON.stringify({
+          event: 'add-customer',
+          payload: customer,
+        }));
+      },
+      customers: simulation.value.customers,
+      slug,
+    });
+  }
+
+  return {
+    open: (type: 'history' | 'addOrder' | 'droneStatus' | 'addWarehouse' | 'addCustomer') => {
+      if (type === 'history') {
+        if (!simulation.value?.history) return;
+
+        historyDialog.open({
+          slug,
+          history: simulation.value.history,
+        });
+
+        return;
+      }
+
+      if (type === 'droneStatus') {
+        if (!simulation.value?.drones) return;
+
+        droneStatusDialog.open({
+          slug,
+          drones: simulation.value.drones,
+        });
+        return;
+      }
+
+      if (type === 'addOrder') {
+        openAddOrderDialog()
+        return;
+      }
+
+      if (type === 'addWarehouse') {
+        openAddWarehouseDialog()
+        return;
+      }
+
+      if (type === 'addCustomer') {
+        openAddCustomerDialog()
+        return;
+      }
+
+      assertNever(type)
+    },
+    historyDialog,
+    addOrderDialog,
+    droneStatusDialog,
+  }
+}
 
 function useAnalytics() {
   const numberFormatter = new Intl.NumberFormat('en-US', {

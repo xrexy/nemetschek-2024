@@ -6,8 +6,9 @@ import type { HistoryEventPayloads, HistoryEvents } from "../types/history";
 import type { Drone } from "../types/drone";
 import type { Order } from "../types/order";
 import type { SimulationData } from "../types/simulation";
-import type { Warehouse } from "../types/warehouse";
+import type { InputWarehouse, Warehouse } from "../types/warehouse";
 import type { Position } from "../types/position";
+import { Customer } from "../types/customer";
 
 type DB = {
   history: ReturnType<typeof memoryDbHistory>,
@@ -88,7 +89,7 @@ export const memoryDbDrone = (data: SimulationData) => ({
     // if idle(in warehouse), calculate how much it's charged
     if (drone.status === 'idle') {
       if (drone.battery.currentCharge === maxCharge) return;
-      
+
       const chargePerTick = maxCharge / WAREHOUSE_TIME_FOR_FULL_CHARGE; // 20 program minutes = full charge
       const chargedInThisTick = chargePerTick * programDiff;
 
@@ -137,11 +138,18 @@ export const memoryDbDrone = (data: SimulationData) => ({
   }
 })
 
+export const memoryDbCustomer = (data: SimulationData) => ({
+  add(c: Customer) {
+    data.customers.push(c)
+    return c
+  }
+})
+
 export const memoryDbWarehouse = (data: SimulationData) => ({
-  getWithId: (id: number, arr = data.warehouses) => {
+  getWithId(id: number, arr = data.warehouses) {
     return arr[id];
   },
-  getNearest: (position: Position, arr = data.warehouses) => {
+  getNearest(position: Position, arr = data.warehouses) {
     return arr.map((warehouse, id) => ({
       warehouse,
       id,
@@ -150,6 +158,17 @@ export const memoryDbWarehouse = (data: SimulationData) => ({
       if (acc.distance < curr.distance) return acc;
       return curr;
     })
+  },
+  add(w: InputWarehouse) {
+    const warehouse: Warehouse = {
+      name: w.name,
+      droneIds: [],
+      position: { x: w.x, y: w.y },
+      id: data.warehouses.length
+    }
+    
+    data.warehouses.push(warehouse)
+    return warehouse
   }
 })
 
@@ -158,5 +177,6 @@ export const memoryDb = (data: SimulationData) => ({
   history: memoryDbHistory(data),
   order: memoryDbOrder(data),
   drone: memoryDbDrone(data),
-  warehouse: memoryDbWarehouse(data)
+  warehouse: memoryDbWarehouse(data),
+  customer: memoryDbCustomer(data)
 })

@@ -1,8 +1,7 @@
-import type { Drone } from "./drone"
 import type { Order } from "./order"
-import type { Warehouse } from "./warehouse"
+import type { Position } from "./position"
 
-export type HistoryEvents = 'created' | 'drone-created' | 'drone-battery-update' | 'drone-returned' | 'drone-sent' | 'order-fulfilled' | 'order-added'
+export type HistoryEvents = 'created' | 'warehouse-added' | 'customer-added' | 'drone-created' | 'drone-battery-update' | 'drone-returned' | 'drone-sent' | 'order-fulfilled' | 'order-added'
 type MinimalOrder = { customerId: number } & Pick<Order, 'productList' | 'id'>
 
 export interface HistoryEventPayloads {
@@ -37,6 +36,20 @@ export interface HistoryEventPayloads {
 
   'order-added': {
     order: MinimalOrder
+  },
+
+  'warehouse-added': {
+    warehouse: {
+      id: number,
+      position: Position
+    }
+  }
+
+  'customer-added': {
+    customer: {
+      name: string,
+      id: number,
+    }
   }
 }
 

@@ -10,8 +10,7 @@
       <div class="mx-1 h-px flex-1 transition duration-300 bg-neutral-400/20 group-hover:bg-emerald-500/60" />
       <p class="text-emerald-200">{{ value }}</p>
     </div>
-
-  </div>
+  </div> 
 </template>
 
 <script setup lang="ts">

@@ -104,7 +104,25 @@ function aggregateEvent(entry: HistoryEntry<HistoryEvents>): AggregatedData {
     }
   }
 
-  throw new Error('Unknown event type');
+  if (isHistoryEvent(entry, 'warehouse-added')) {
+    const { warehouse: { id, position } } = entry.payload;
+    return {
+      event: entry.event,
+      timestamp: entry.createdAt,
+      text: `Warehouse #${id} added at position (${position.x}, ${position.y})`
+    }
+  }
+
+  if(isHistoryEvent(entry, 'customer-added')) {
+    const { customer: {id, name} } = entry.payload;
+    return {
+      event: entry.event,
+      timestamp: entry.createdAt,
+      text: `Customer #${id} added with name ${name}`
+    }
+  }
+
+  throw new Error('Unknown event type ' + entry.event);
 }
 
 const aggregated = computed(() => {

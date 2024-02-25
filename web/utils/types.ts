@@ -106,7 +106,7 @@ export type Warehouse = {
   droneIds: number[];
 }
 
-export type HistoryEvents = 'created' | 'drone-created' | 'drone-battery-update' | 'drone-returned' | 'drone-sent' | 'order-fulfilled' | 'order-added'
+export type HistoryEvents = 'created' | 'drone-created' | 'drone-battery-update' | 'drone-returned' | 'drone-sent' | 'order-fulfilled' | 'order-added' | 'warehouse-added' | 'customer-added'
 export type MinimalOrder = { customerId: number } & Pick<Order, 'productList' | 'id'>
 export type InputOrder = Omit<MinimalOrder, 'id'>
 export interface HistoryEventPayloads {
@@ -141,6 +141,21 @@ export interface HistoryEventPayloads {
 
   'order-added': {
     order: MinimalOrder
+  },
+
+
+  'warehouse-added': {
+    warehouse: {
+      id: number,
+      position: Position
+    }
+  }
+
+  'customer-added': {
+    customer: {
+      name: string,
+      id: number,
+    }
   }
 }
 
