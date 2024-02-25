@@ -93,7 +93,7 @@ export type Warehouse = {
 }
 
 export type HistoryEvents = 'created' | 'drone-created' | 'drone-battery-update' | 'drone-returned' | 'drone-sent' | 'order-fulfilled'
-export type MinimalOrder = { customerId: number } & Pick<Order, 'productList'>
+export type MinimalOrder = { customerId: number } & Pick<Order, 'productList' | 'id'>
 export interface HistoryEventPayloads {
   created: {},
 
@@ -136,6 +136,10 @@ export type History = {
   _meta: {
     lastFetched: number
   }
+}
+
+export function isHistoryEvent<T extends HistoryEvents>(event: HistoryEntry<HistoryEvents>, eventType: T): event is HistoryEntry<T> {
+  return event.event === eventType;
 }
 
 export type Simulation = {

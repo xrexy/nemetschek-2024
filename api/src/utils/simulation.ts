@@ -147,6 +147,7 @@ export function simulationTick(data: SimulationData, time?: {
 
       db.history.addEvent('order-fulfilled', {
         order: {
+          id: order.id,
           customerId: order.customer.id,
           productList: order.productList
         },

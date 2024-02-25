@@ -56,6 +56,7 @@ export const memoryDbDrone = (data: SimulationData) => ({
 
     history.addEvent('drone-sent', {
       order: {
+        id: order.id,
         customerId: order.customer.id,
         productList: order.productList
       },

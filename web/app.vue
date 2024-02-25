@@ -1,5 +1,6 @@
 <template>
   <div class="">
+    <SimulationHistoryDialog />
     <Toaster />
     <AppHeader />
 

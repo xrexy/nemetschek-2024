@@ -1,6 +1,11 @@
 <template>
   <div class="flex flex-col items-center justify-start gap-4">
-    <h1 class="font-mono font-black text-3xl">{{ slug }}</h1>
+    <div class="flex items-center gap-2">
+      <h1 class="font-mono font-black text-3xl">{{ slug }}</h1>
+      <Button :disabled="!simulation"  @click="openHistoryDialog" variant="ghost" size="icon" title="History">
+        <Icon name="solar:history-bold" size="1.3rem" />
+      </Button>
+    </div>
 
     <p class="opacity-50" v-if="!ready">
       Preparing simulation...
@@ -64,14 +69,16 @@
 </template>
 
 <script setup lang="ts">
-import { Separator } from 'radix-vue';
+import { useToast } from '~/components/ui/toast';
 
 type Analytic = keyof Simulation['analytics'];
 
+const { toast } = useToast();
 const route = useRoute();
 const _slug = route.params.slug;
 const slug = Array.isArray(_slug) ? _slug[0] : _slug;
 
+const historyDialog = useHistoryDialog();
 const ready = ref(false);
 const simulation = shallowRef<Simulation | null>(null);
 
@@ -81,6 +88,41 @@ const numberFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 
 function format(value: number) {
   return numberFormatter.format(value)
 }
+
+function openHistoryDialog() {
+  console.log('openHistoryDialog', slug, simulation.value?.history)
+  if(!simulation.value?.history) return;
+
+  historyDialog.open({
+    slug,
+    history: simulation.value.history,
+  });
+}
+
+const lastHistoryIdx = ref(0);
+watch(() => simulation.value?.history, (history, oldHistory) => {
+  if (!history || !oldHistory) return;
+  if (history.data.length === oldHistory.data.length) return;
+  const data = history.data.slice(lastHistoryIdx.value);
+
+  if (data.length === 0) return;
+
+  toast({
+    title: "History Updated",
+    description: `New data has been added to the simulation history. (+${data.length} entries)`,
+    duration: 1250,
+  })
+
+  lastHistoryIdx.value = history.data.length;
+
+  // console.log(lastHistoryIdx.value)
+  // for (let i = lastHistoryIdx.value; i < history.data.length; i++) {
+  //   const entry = history[i];
+  //   console.log(entry)
+  // }
+
+  // lastHistoryIdx.value = history.data.length;
+})
 
 let socket: WebSocket;
 onBeforeMount(() => {
