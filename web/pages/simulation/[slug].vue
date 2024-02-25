@@ -10,7 +10,7 @@
     </p>
     <div v-else class="w-[65%] min-h-fit flex gap-4">
       <div
-        class="flex-1 p-5 flex flex-col gap-4 rounded-md bg-gradient-to-t from-emerald-700/5 to-gray-800/25 transition duration-150 border-2 border-emerald-500/20 hover:border-emerald-500/30">
+        class="max-h-[40rem] overflow-auto flex-1 p-5 flex flex-col gap-4 rounded-md bg-gradient-to-t from-emerald-700/5 to-gray-800/25 transition duration-150 border-2 border-emerald-500/20 hover:border-emerald-500/30">
         <div>
           <p class="font-semibold text-xl pb-2">Warehouses</p>
           <div class="grid grid-cols-2 gap-2">
@@ -27,8 +27,7 @@
 
         <div>
           <p class="font-semibold text-xl pb-2">Orders</p>
-          <p v-if="!simulation.analytics.hasOpenOrders" class="opacity-50 text-sm">There are no orders at the moment.</p>
-          <div v-else class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-3 gap-2">
             <SimulationOrder v-for="order in simulation.orders" :order="order" :key="order.id" />
           </div>
         </div>

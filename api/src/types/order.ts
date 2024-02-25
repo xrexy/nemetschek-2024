@@ -8,6 +8,7 @@ export const ProductList = t.Record(t.String(), t.Number({ minimum: 1 }))
 export const OrderStatus = t.Union([
   t.Literal('pending'),
   t.Literal('assigned'),
+  t.Literal('delivered')
 ])
 
 export const OrderStatusData = t.Object({
@@ -15,6 +16,11 @@ export const OrderStatusData = t.Object({
   assigned: t.Object({
     droneId: t.Number({ minimum: 0 }),
     startedAt: t.Number({ minimum: 0 })
+  }),
+  delivered: t.Object({
+    droneId: t.Number({ minimum: 0 }),
+    startedAt: t.Number({ minimum: 0 }),
+    distance: t.Number({ minimum: 0 }),
   })
 })
 

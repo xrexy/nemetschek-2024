@@ -123,6 +123,15 @@ export function simulationTick(data: SimulationData, time?: {
       }
       const { warehouse, distance } = db.warehouse.getNearest(order.customer.coordinates)
 
+      order.status = 'delivered'
+      order.statusData = {
+        delivered: {
+          droneId: drone.id,
+          startedAt: drone.statusData.delivering!.startedAt,
+          distance: drone.statusData.delivering!.distance
+        }
+       }
+
       drone.status = 'returning';
       drone.statusData = {
         returning: {
@@ -136,8 +145,7 @@ export function simulationTick(data: SimulationData, time?: {
         }
       };
 
-      // filter out the order
-      data.orders = data.orders.filter(o => o.id !== orderId);
+
 
       db.history.addEvent('order-fulfilled', {
         order: {
@@ -147,8 +155,9 @@ export function simulationTick(data: SimulationData, time?: {
         droneId: drone.id,
       })
 
-      data.analytics.openOrders = data.orders.length;
-      data.analytics.hasOpenOrders = data.orders.length > 0;
+      const openOrders = db.order.getWithStatus('pending').length;
+      data.analytics.openOrders = openOrders;
+      data.analytics.hasOpenOrders = openOrders > 0;
 
       data.analytics.totalOrdersDelivered++;
       data.analytics.totalDistanceCovered += distance;
