@@ -66,8 +66,6 @@ export function simulationTick(data: SimulationData, time?: {
   programDiff: number,
 }): SimulationData {
   const { now, programDiff } = time ?? calculateSimulationTime(data);
-  console.debug(`[${data.slug}] Simulation tick: ${now}; ${programDiff}`)
-
   const db = memoryDb(data);
 
   for (let drone of db.drone.getWithStatus('idle')) {
@@ -247,8 +245,6 @@ export function simulationTick(data: SimulationData, time?: {
 
     db.drone.sendToOrder(db.history, drone, warehouse, order, distance, now);
   }
-
-  data.history._meta.lastFetched = now;
 
   return data;
 }

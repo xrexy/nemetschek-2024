@@ -113,10 +113,17 @@ export const simulationController = new Elysia({
         // TODO: handle missed ticks, not sure what to with them yet
         // everything is in memory, and "simulationTick" implemantation is designed to handle missed ticks
         // also not as simple as just calling "simulationTick" multiple times, as it's not idempotent
+
         ctx.log.debug(`missed ${missedTicks - 1} ticks for slug ${s}`);
       }
 
+      if (missedTicks === 1) {
+        console.debug(`[${data.slug}] Simulation tick: ${now}; ${programDiff}`)
+      }
+      
       data = simulationTick(data, { now, diff, programDiff });
+      data.history._meta.lastFetched = now;
+
       ctx.store.data[s] = data;
 
       return data;
