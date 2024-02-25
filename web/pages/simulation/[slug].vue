@@ -5,6 +5,9 @@
       <Button :disabled="!simulation"  @click="openHistoryDialog" variant="ghost" size="icon" title="History">
         <Icon name="solar:history-bold" size="1.3rem" />
       </Button>
+      <Button :disabled="!simulation"  @click="openDroneStatusDialog" variant="ghost" size="icon" title="Drone Statuses">
+        <Icon name="carbon:drone-front" size="1.3rem" />
+      </Button>
     </div>
 
     <p class="opacity-50" v-if="!ready">
@@ -78,6 +81,7 @@ const route = useRoute();
 const _slug = route.params.slug;
 const slug = Array.isArray(_slug) ? _slug[0] : _slug;
 
+const droneStatusDialog = useDroneStatusDialog();
 const historyDialog = useHistoryDialog();
 const ready = ref(false);
 const simulation = shallowRef<Simulation | null>(null);
@@ -90,12 +94,20 @@ function format(value: number) {
 }
 
 function openHistoryDialog() {
-  console.log('openHistoryDialog', slug, simulation.value?.history)
   if(!simulation.value?.history) return;
 
   historyDialog.open({
     slug,
     history: simulation.value.history,
+  });
+}
+
+function openDroneStatusDialog() {
+  if(!simulation.value?.drones) return;
+
+  droneStatusDialog.open({
+    slug,
+    drones: simulation.value.drones,
   });
 }
 

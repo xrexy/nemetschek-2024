@@ -1,6 +1,8 @@
 <template>
   <div class="">
     <SimulationHistoryDialog />
+    <SimulationDroneStatusDialog />
+    
     <Toaster />
     <AppHeader />
 

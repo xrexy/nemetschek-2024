@@ -1,6 +1,6 @@
 <template>
   <Dialog v-if="data" v-model:open="isOpen">
-    <DialogContent class="sm:max-w-[450px] grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
+    <DialogContent class="sm:max-w-[464px] grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
       <DialogHeader class="p-6 pb-0">
         <DialogTitle>History</DialogTitle>
         <DialogDescription>
@@ -18,11 +18,6 @@
           <p class="text-sm text-gray-400">{{ text }}</p>
         </div>
       </div>
-      <DialogFooter class="p-6 pt-0">
-        <Button type="submit">
-          Save changes
-        </Button>
-      </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>
@@ -56,7 +51,7 @@ function aggregateEvent(entry: HistoryEntry<HistoryEvents>): AggregatedData {
     return {
       event: entry.event,
       timestamp: entry.createdAt,
-      text: `Drone #${droneId}'s battery changed from ${oldCharge} to ${newCharge}`
+      text: `Drone #${droneId}'s battery changed from ${format(oldCharge)} to ${format(newCharge)}`
     }
   }
 
@@ -95,7 +90,7 @@ function aggregateEvent(entry: HistoryEntry<HistoryEvents>): AggregatedData {
     return {
       event: entry.event,
       timestamp: entry.createdAt,
-      text: `Order #${id} fulfilled by drone #${droneId} for customer #${customerId} with products ${normalizedProductList}`
+      text: `Order #${id} fulfilled by Drone #${droneId} for Customer #${customerId} with products ${normalizedProductList}`
     }
   }
 

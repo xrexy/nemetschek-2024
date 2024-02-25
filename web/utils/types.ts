@@ -1,3 +1,7 @@
+export function assertNever(x: never): never {
+  throw new Error('Unexpected object: ' + x);
+}
+
 export type Position = { x: number; y: number; }
 
 export type Customer = {
@@ -69,6 +73,16 @@ export type DroneStatusData = {
     distanceCovered: number;
     startedAt: number;
   };
+}
+
+export function getStatusData<T extends DroneStatus>(
+  drone: Drone,
+  status: T
+): DroneStatusData[T] | undefined {
+  if (drone.status === status && drone.statusData !== undefined) {
+    return drone.statusData[status];
+  }
+  return undefined;
 }
 
 export type Drone = {
